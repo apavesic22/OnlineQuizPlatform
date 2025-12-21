@@ -48,6 +48,59 @@ export const usersTableDef = {
   ],
 };
 
+export const categoriesTableDef = {
+  name: "CATEGORIES",
+  columns: {
+    category_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
+    category_name: { type: "TEXT", notNull: true, unique: true },
+    times_chosen: { type: "INTEGER", notNull: true, default: 0 },
+  },
+};
+
+export const categorySuggestionsTableDef = {
+  name: "CATEGORY_SUGGESTIONS",
+  columns: {
+    suggestion_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
+
+    user_id: { type: "INTEGER", notNull: true },
+    name: { type: "TEXT", notNull: true },
+
+    status: {
+      type: "TEXT",
+      notNull: true,
+      default: "pending",
+      check: "status IN ('pending','approved','rejected')",
+    },
+
+    created_at: { type: "DATETIME", notNull: true, defaultRaw: "CURRENT_TIMESTAMP" },
+    reviewed_at: { type: "DATETIME" },
+    reviewer_id: { type: "INTEGER" },
+  },
+  foreignKeys: [
+    { column: "user_id", references: "USERS(user_id)" },
+    { column: "reviewer_id", references: "USERS(user_id)" },
+  ],
+};
+
+export const questionTypesTableDef = {
+  name: "QUESTION_TYPES",
+  columns: {
+    id: { type: "INTEGER", primaryKey: true, autoincrement: true },
+    type: { type: "TEXT", notNull: true, unique: true },
+  },
+};
+
+export const quizDifficultiesTableDef = {
+  name: "QUIZ_DIFFICULTIES",
+  columns: {
+    id_quiz_difficulty: { type: "INTEGER", primaryKey: true, autoincrement: true },
+    difficulty: { type: "TEXT", notNull: true, unique: true },
+  },
+};
+
+
+
+
 
 function sqlQuote(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
@@ -168,6 +221,41 @@ export async function seedUsers(): Promise<void> {
   }
 }
 
+function seedQuizDifficulties() {
+  if (!db.connection) throw new Error("DB not open");
+
+  const difficulties = [
+    { id_quiz_difficulty: 1, difficulty: "Easy" },
+    { id_quiz_difficulty: 2, difficulty: "Medium" },
+    { id_quiz_difficulty: 3, difficulty: "Hard" },
+  ]
+
+  for (const d of difficulties) {
+    db.connection.run(
+      `INSERT OR IGNORE INTO QUIZ_DIFFICULTIES (id_quiz_difficulty, difficulty) VALUES (?, ?)`,
+      [d.id_quiz_difficulty, d.difficulty]
+    );
+  }
+}
+
+function seedQuestionTypes() {
+  if (!db.connection) throw new Error("DB not open");
+
+  const types = [
+    { id: 1, type: "Multiple Choice" },
+    { id: 2, type: "True/False" }
+  ]
+
+  for (const t of types) {
+    db.connection.run(
+      `INSERT OR IGNORE INTO QUESTION_TYPES (id, type) VALUES (?, ?)`,
+      [t.id, t.type]
+    );
+  }
+}
+
+
+
 export async function createSchemaAndData(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
@@ -176,4 +264,16 @@ export async function createSchemaAndData(): Promise<void> {
 
   await db.connection.exec(createTableStatement(usersTableDef));
   await seedUsers();
+  
+  await db.connection.exec(createTableStatement(categoriesTableDef));
+
+  await db.connection.exec(createTableStatement(categorySuggestionsTableDef));
+
+  await db.connection.exec(createTableStatement(questionTypesTableDef));
+  await seedQuestionTypes(); 
+
+  await db.connection.exec(createTableStatement(quizDifficultiesTableDef));
+  await seedQuizDifficulties();
 }
+
+
