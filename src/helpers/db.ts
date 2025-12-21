@@ -354,15 +354,15 @@ function seedQuizDifficulties() {
   if (!db.connection) throw new Error("DB not open");
 
   const difficulties = [
-    { id_quiz_difficulty: 1, difficulty: "Easy" },
-    { id_quiz_difficulty: 2, difficulty: "Medium" },
-    { id_quiz_difficulty: 3, difficulty: "Hard" },
+    { id: 1, difficulty: "Easy" },
+    { id: 2, difficulty: "Medium" },
+    { id: 3, difficulty: "Hard" },
   ]
 
   for (const d of difficulties) {
     db.connection.run(
       `INSERT OR IGNORE INTO QUIZ_DIFFICULTIES (id_quiz_difficulty, difficulty) VALUES (?, ?)`,
-      [d.id_quiz_difficulty, d.difficulty]
+      [d.id, d.difficulty]
     );
   }
 }
@@ -382,6 +382,30 @@ function seedQuestionTypes() {
     );
   }
 }
+
+const indexStatements = [
+  `CREATE INDEX IF NOT EXISTS idx_users_role ON USERS(role_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_category_suggestions_status ON CATEGORY_SUGGESTIONS(status);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_questions_category ON QUESTIONS(category_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_questions_type ON QUESTIONS(question_type_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_questions_difficulty ON QUESTIONS(difficulty_id);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_quizzes_user ON QUIZZES(user_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_quizzes_category ON QUIZZES(category_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_quizzes_difficulty ON QUIZZES(difficulty_id);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz ON QUIZ_QUESTIONS(quiz_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_quiz_questions_question ON QUIZ_QUESTIONS(question_id);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_attempt_answers_attempt ON ATTEMPT_ANSWERS(attempt_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_attempt_answers_question ON ATTEMPT_ANSWERS(question_id);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_answer_options_question ON ANSWER_OPTIONS(question_id);`,
+
+  `CREATE INDEX IF NOT EXISTS idx_logs_user ON LOGS(user_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_logs_quiz ON LOGS(quiz_id);`,
+];
 
 
 
@@ -434,6 +458,11 @@ export async function createSchemaAndData(): Promise<void> {
 
   await db.connection.exec(createTableStatement(quizAttemptsTableDef));
   console.log("Quiz attempts table created");
+
+  for (const stmt of indexStatements) {
+  await db.connection.exec(stmt);
+}
+  console.log("Indexes created");
 }
 
 
