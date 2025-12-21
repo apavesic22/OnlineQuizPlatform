@@ -7,6 +7,10 @@ import { errorHandler } from './helpers/errors';
 import { openDb } from './helpers/db';
 import { authRouter, initAuth } from './helpers/auth';
 import { uploadRouter } from './helpers/fileupload';
+import { usersRouter } from './api/users';
+import { quizzesRouter } from './api/quizzes';
+import { questionsRouter } from './api/questions';
+import { categoriesRouter } from './api/categories';
 
 config({ quiet: true });
 
@@ -39,7 +43,10 @@ async function main() {
   
   // file upload router
   app.use(apiUrl + '/upload', uploadRouter);
-
+  app.use(apiUrl + '/users', usersRouter);  
+  app.use(apiUrl + '/quizzes', quizzesRouter);
+  app.use(apiUrl + '/questions', questionsRouter);
+  app.use(apiUrl + '/categories', categoriesRouter);
 
   // install our error handler (must be the last app.use)
   app.use(errorHandler);

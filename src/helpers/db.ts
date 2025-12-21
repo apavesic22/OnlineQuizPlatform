@@ -361,7 +361,7 @@ function seedQuizDifficulties() {
 
   for (const d of difficulties) {
     db.connection.run(
-      `INSERT OR IGNORE INTO QUIZ_DIFFICULTIES (id_quiz_difficulty, difficulty) VALUES (?, ?)`,
+      `INSERT OR IGNORE INTO QUIZ_DIFFICULTIES (id, difficulty) VALUES (?, ?)`,
       [d.id, d.difficulty]
     );
   }
