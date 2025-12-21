@@ -84,7 +84,6 @@ export const STATIC_ROLES = [
   { role_id: 2, name: "Management" },
   { role_id: 3, name: "Verified user" },
   { role_id: 4, name: "Regular user" },
-  { role_id: 5, name: "Guest" },
 ] as const;
 
 export async function seedRoles(): Promise<void> {
