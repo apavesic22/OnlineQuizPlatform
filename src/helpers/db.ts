@@ -175,4 +175,5 @@ export async function createSchemaAndData(): Promise<void> {
   await seedRoles();
 
   await db.connection.exec(createTableStatement(usersTableDef));
+  await seedUsers();
 }
