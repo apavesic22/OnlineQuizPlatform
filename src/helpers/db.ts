@@ -1,7 +1,7 @@
 import { open, Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { hashPassword } from "./auth";
-import { faker } from "@faker-js/faker";  
+import { faker } from "@faker-js/faker";
 export const db: { connection: Database | null } = {
   connection: null,
 };
@@ -44,9 +44,7 @@ export const usersTableDef = {
     rank: { type: "INTEGER", notNull: true, default: 0 },
     total_score: { type: "INTEGER", notNull: true, default: 0 },
   },
-  foreignKeys: [
-    { column: "role_id", references: "USER_ROLES(role_id)" },
-  ],
+  foreignKeys: [{ column: "role_id", references: "USER_ROLES(role_id)" }],
 };
 
 export const categoriesTableDef = {
@@ -73,7 +71,11 @@ export const categorySuggestionsTableDef = {
       check: "status IN ('pending','approved','rejected')",
     },
 
-    created_at: { type: "DATETIME", notNull: true, defaultRaw: "CURRENT_TIMESTAMP" },
+    created_at: {
+      type: "DATETIME",
+      notNull: true,
+      defaultRaw: "CURRENT_TIMESTAMP",
+    },
     reviewed_at: { type: "DATETIME" },
     reviewer_id: { type: "INTEGER" },
   },
@@ -99,20 +101,22 @@ export const quizDifficultiesTableDef = {
   },
 };
 
-
 export const questionsTableDef = {
   name: "QUESTIONS",
   columns: {
     question_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
-    category_id: { type: "INTEGER", notNull: true },
+
+    quiz_id: { type: "INTEGER", notNull: true },
+
     question_type_id: { type: "INTEGER", notNull: true },
     question_text: { type: "TEXT", notNull: true },
-    difficulty_id: { type: "INTEGER", notNull: true },
+
+    position: { type: "INTEGER", notNull: true },
+    time_limit: { type: "INTEGER", notNull: true, default: 15 },
   },
   foreignKeys: [
-    { column: "category_id", references: "CATEGORIES(category_id)" },
+    { column: "quiz_id", references: "QUIZZES(quiz_id)" },
     { column: "question_type_id", references: "QUESTION_TYPES(id)" },
-    { column: "difficulty_id", references: "QUIZ_DIFFICULTIES(id)" }, 
   ],
 };
 
@@ -120,7 +124,7 @@ export const quizzesTableDef = {
   name: "QUIZZES",
   columns: {
     quiz_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
-    user_id: { type: "INTEGER", notNull: true }, 
+    user_id: { type: "INTEGER", notNull: true },
     category_id: { type: "INTEGER", notNull: true },
     difficulty_id: { type: "INTEGER", notNull: true },
 
@@ -128,7 +132,11 @@ export const quizzesTableDef = {
     question_count: { type: "INTEGER", notNull: true, default: 10 },
     is_customizable: { type: "INTEGER", notNull: true, default: 0 },
     duration: { type: "INTEGER", notNull: true },
-    created_at: { type: "DATETIME", notNull: true, defaultRaw: "CURRENT_TIMESTAMP" },
+    created_at: {
+      type: "DATETIME",
+      notNull: true,
+      defaultRaw: "CURRENT_TIMESTAMP",
+    },
   },
   foreignKeys: [
     { column: "user_id", references: "USERS(user_id)" },
@@ -137,25 +145,14 @@ export const quizzesTableDef = {
   ],
 };
 
-export const quizQuestionsTableDef = {
-  name: "QUIZ_QUESTIONS",
-  columns: {
-    id: { type: "INTEGER", primaryKey: true, autoincrement: true },
-    quiz_id: { type: "INTEGER", notNull: true },
-    question_id: { type: "INTEGER", notNull: true },
-    position: { type: "INTEGER", notNull: true },
-    time_limit: { type: "INTEGER", notNull: true, default: 15 },
-  },
-  foreignKeys: [
-    { column: "quiz_id", references: "QUIZZES(quiz_id)" },
-    { column: "question_id", references: "QUESTIONS(question_id)" },
-  ],
-};
-
 export const attemptAnswersTableDef = {
   name: "ATTEMPT_ANSWERS",
   columns: {
-    attempt_answer_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
+    attempt_answer_id: {
+      type: "INTEGER",
+      primaryKey: true,
+      autoincrement: true,
+    },
     attempt_id: { type: "INTEGER", notNull: true },
     question_id: { type: "INTEGER", notNull: true },
     answer_id: { type: "INTEGER", notNull: true },
@@ -187,7 +184,11 @@ export const quizLikesTableDef = {
   columns: {
     user_id: { type: "INTEGER", notNull: true },
     quiz_id: { type: "INTEGER", notNull: true },
-    created_at: { type: "DATETIME", notNull: true, defaultRaw: "CURRENT_TIMESTAMP" },
+    created_at: {
+      type: "DATETIME",
+      notNull: true,
+      defaultRaw: "CURRENT_TIMESTAMP",
+    },
   },
   primaryKey: ["user_id", "quiz_id"],
   foreignKeys: [
@@ -221,7 +222,11 @@ export const quizAttemptsTableDef = {
     quiz_id: { type: "INTEGER", notNull: true },
     score: { type: "INTEGER", notNull: true },
 
-    started_at: { type: "DATETIME", notNull: true, defaultRaw: "CURRENT_TIMESTAMP" },
+    started_at: {
+      type: "DATETIME",
+      notNull: true,
+      defaultRaw: "CURRENT_TIMESTAMP",
+    },
     finished_at: { type: "DATETIME" },
     total_time_ms: { type: "INTEGER", notNull: true },
   },
@@ -230,7 +235,6 @@ export const quizAttemptsTableDef = {
     { column: "quiz_id", references: "QUIZZES(quiz_id)" },
   ],
 };
-
 
 function sqlQuote(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
@@ -264,7 +268,9 @@ function createTableStatement(def: {
       colDef += ` DEFAULT ${opts.defaultRaw}`;
     } else if (opts.default !== undefined) {
       const d =
-        typeof opts.default === "string" ? sqlQuote(opts.default) : String(opts.default);
+        typeof opts.default === "string"
+          ? sqlQuote(opts.default)
+          : String(opts.default);
       colDef += ` DEFAULT ${d}`;
     }
 
@@ -280,7 +286,9 @@ function createTableStatement(def: {
     });
   }
 
-  return `CREATE TABLE IF NOT EXISTS ${def.name} (\n  ${cols.join(",\n  ")}\n);`;
+  return `CREATE TABLE IF NOT EXISTS ${def.name} (\n  ${cols.join(
+    ",\n  "
+  )}\n);`;
 }
 
 export const STATIC_ROLES = [
@@ -362,15 +370,19 @@ export async function seedUsers(): Promise<void> {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
 
-    const username = faker.internet.username({
-      firstName,
-      lastName,
-    }).toLowerCase();
+    const username = faker.internet
+      .username({
+        firstName,
+        lastName,
+      })
+      .toLowerCase();
 
-    const email = faker.internet.email({
-      firstName,
-      lastName,
-    }).toLowerCase();
+    const email = faker.internet
+      .email({
+        firstName,
+        lastName,
+      })
+      .toLowerCase();
 
     const password_hash = hashPassword("User123"); // same password for all fake users
 
@@ -379,13 +391,13 @@ export async function seedUsers(): Promise<void> {
        (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        4,            
+        4,
         username,
         email,
         password_hash,
-        faker.datatype.boolean() ? 1 : 0, 
-        0, 
-        faker.number.int({ min: 0, max: 5000 }), 
+        faker.datatype.boolean() ? 1 : 0,
+        0,
+        faker.number.int({ min: 0, max: 5000 }),
       ]
     );
   }
@@ -395,8 +407,8 @@ export async function recomputeUserRanks(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
   // Order users by score DESC (highest first)
-const users: { user_id: number; total_score: number }[] =
-  await db.connection.all(`
+  const users: { user_id: number; total_score: number }[] = await db.connection
+    .all(`
     SELECT user_id, total_score
     FROM USERS
     ORDER BY total_score DESC, user_id ASC
@@ -405,10 +417,10 @@ const users: { user_id: number; total_score: number }[] =
   let rank = 1;
 
   for (const user of users) {
-    await db.connection.run(
-      `UPDATE USERS SET rank = ? WHERE user_id = ?`,
-      [rank, user.user_id]
-    );
+    await db.connection.run(`UPDATE USERS SET rank = ? WHERE user_id = ?`, [
+      rank,
+      user.user_id,
+    ]);
     rank++;
   }
 
@@ -422,7 +434,7 @@ function seedQuizDifficulties() {
     { id: 1, difficulty: "Easy" },
     { id: 2, difficulty: "Medium" },
     { id: 3, difficulty: "Hard" },
-  ]
+  ];
 
   for (const d of difficulties) {
     db.connection.run(
@@ -437,8 +449,8 @@ function seedQuestionTypes() {
 
   const types = [
     { id: 1, type: "Multiple Choice" },
-    { id: 2, type: "True/False" }
-  ]
+    { id: 2, type: "True/False" },
+  ];
 
   for (const t of types) {
     db.connection.run(
@@ -452,16 +464,13 @@ const indexStatements = [
   `CREATE INDEX IF NOT EXISTS idx_users_role ON USERS(role_id);`,
   `CREATE INDEX IF NOT EXISTS idx_category_suggestions_status ON CATEGORY_SUGGESTIONS(status);`,
 
-  `CREATE INDEX IF NOT EXISTS idx_questions_category ON QUESTIONS(category_id);`,
   `CREATE INDEX IF NOT EXISTS idx_questions_type ON QUESTIONS(question_type_id);`,
-  `CREATE INDEX IF NOT EXISTS idx_questions_difficulty ON QUESTIONS(difficulty_id);`,
-
+  `CREATE INDEX IF NOT EXISTS idx_questions_quiz ON QUESTIONS(quiz_id);`,
+  `CREATE INDEX IF NOT EXISTS idx_questions_type ON QUESTIONS(question_type_id);`,
+  
   `CREATE INDEX IF NOT EXISTS idx_quizzes_user ON QUIZZES(user_id);`,
   `CREATE INDEX IF NOT EXISTS idx_quizzes_category ON QUIZZES(category_id);`,
   `CREATE INDEX IF NOT EXISTS idx_quizzes_difficulty ON QUIZZES(difficulty_id);`,
-
-  `CREATE INDEX IF NOT EXISTS idx_quiz_questions_quiz ON QUIZ_QUESTIONS(quiz_id);`,
-  `CREATE INDEX IF NOT EXISTS idx_quiz_questions_question ON QUIZ_QUESTIONS(question_id);`,
 
   `CREATE INDEX IF NOT EXISTS idx_attempt_answers_attempt ON ATTEMPT_ANSWERS(attempt_id);`,
   `CREATE INDEX IF NOT EXISTS idx_attempt_answers_question ON ATTEMPT_ANSWERS(question_id);`,
@@ -472,20 +481,17 @@ const indexStatements = [
   `CREATE INDEX IF NOT EXISTS idx_logs_quiz ON LOGS(quiz_id);`,
 ];
 
-
-
 export async function createSchemaAndData(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
   await db.connection.exec(createTableStatement(userRolesTableDef));
   await seedRoles();
   console.log("User roles loaded");
-  
 
   await db.connection.exec(createTableStatement(usersTableDef));
   await seedUsers();
   console.log("Users loaded");
-  
+
   await db.connection.exec(createTableStatement(categoriesTableDef));
   console.log("Categories table created");
 
@@ -493,7 +499,7 @@ export async function createSchemaAndData(): Promise<void> {
   console.log("Category suggestions table created");
 
   await db.connection.exec(createTableStatement(questionTypesTableDef));
-  await seedQuestionTypes(); 
+  await seedQuestionTypes();
   console.log("Question types loaded");
 
   await db.connection.exec(createTableStatement(quizDifficultiesTableDef));
@@ -505,9 +511,6 @@ export async function createSchemaAndData(): Promise<void> {
 
   await db.connection.exec(createTableStatement(quizzesTableDef));
   console.log("Quizzes table created");
-
-  await db.connection.exec(createTableStatement(quizQuestionsTableDef));
-  console.log("Quiz questions table created");
 
   await db.connection.exec(createTableStatement(attemptAnswersTableDef));
   console.log("Attempt answers table created");
@@ -525,11 +528,9 @@ export async function createSchemaAndData(): Promise<void> {
   console.log("Quiz attempts table created");
 
   for (const stmt of indexStatements) {
-  await db.connection.exec(stmt);
-}
+    await db.connection.exec(stmt);
+  }
   console.log("Indexes created");
 
   await recomputeUserRanks();
 }
-
-
