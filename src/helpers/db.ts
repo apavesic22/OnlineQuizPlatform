@@ -1,6 +1,7 @@
 import { open, Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { hashPassword } from "./auth";
+import { faker } from "@faker-js/faker";  
 export const db: { connection: Database | null } = {
   connection: null,
 };
@@ -303,36 +304,43 @@ export async function seedRoles(): Promise<void> {
 export async function seedUsers(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
+  // --- fixed system users ---
   const seed = [
     {
       role_id: 1,
       username: "admin",
       email: "admin@quizify.local",
       password: process.env.SEED_ADMIN_PASSWORD || "Admin123",
+      verified: 1,
     },
     {
       role_id: 2,
       username: "manager",
       email: "manager@quizify.local",
       password: process.env.SEED_MANAGER_PASSWORD || "Manager123",
+      verified: 1,
     },
     {
       role_id: 3,
       username: "verified",
       email: "verified@quizify.local",
       password: process.env.SEED_VERIFIED_PASSWORD || "Verified123",
+      verified: 1,
     },
     {
       role_id: 4,
       username: "user",
       email: "user@quizify.local",
       password: process.env.SEED_USER_PASSWORD || "User123",
+      verified: 0,
     },
   ];
 
-  for (const u of seed) {
-    const password_hash = hashPassword(u.password);
+  // --- faker users count (env or default) ---
+  const FAKE_USERS_COUNT = parseInt(process.env.DBFAKEUSERS || "20");
 
+  // --- insert fixed users ---
+  for (const u of seed) {
     await db.connection.run(
       `INSERT OR IGNORE INTO USERS
        (role_id, username, email, password_hash, verified, rank, total_score)
@@ -341,13 +349,70 @@ export async function seedUsers(): Promise<void> {
         u.role_id,
         u.username,
         u.email,
-        password_hash,
-        u.role_id === 3 ? 1 : 0, // verified user gets verified=1
+        hashPassword(u.password),
+        u.verified,
         0,
         0,
       ]
     );
   }
+
+  // --- insert faker users ---
+  for (let i = 0; i < FAKE_USERS_COUNT; i++) {
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.lastName();
+
+    const username = faker.internet.username({
+      firstName,
+      lastName,
+    }).toLowerCase();
+
+    const email = faker.internet.email({
+      firstName,
+      lastName,
+    }).toLowerCase();
+
+    const password_hash = hashPassword("User123"); // same password for all fake users
+
+    await db.connection.run(
+      `INSERT OR IGNORE INTO USERS
+       (role_id, username, email, password_hash, verified, rank, total_score)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        4,            
+        username,
+        email,
+        password_hash,
+        faker.datatype.boolean() ? 1 : 0, 
+        0, 
+        faker.number.int({ min: 0, max: 5000 }), 
+      ]
+    );
+  }
+}
+
+export async function recomputeUserRanks(): Promise<void> {
+  if (!db.connection) throw new Error("DB not open");
+
+  // Order users by score DESC (highest first)
+const users: { user_id: number; total_score: number }[] =
+  await db.connection.all(`
+    SELECT user_id, total_score
+    FROM USERS
+    ORDER BY total_score DESC, user_id ASC
+  `);
+
+  let rank = 1;
+
+  for (const user of users) {
+    await db.connection.run(
+      `UPDATE USERS SET rank = ? WHERE user_id = ?`,
+      [rank, user.user_id]
+    );
+    rank++;
+  }
+
+  console.log("User ranks recomputed");
 }
 
 function seedQuizDifficulties() {
@@ -463,6 +528,8 @@ export async function createSchemaAndData(): Promise<void> {
   await db.connection.exec(stmt);
 }
   console.log("Indexes created");
+
+  await recomputeUserRanks();
 }
 
 
