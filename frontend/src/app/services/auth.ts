@@ -2,47 +2,81 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
-import { User } from '../models/user';
 import { AppRoute } from '../app.routes';
+
+export interface AuthUser {
+  username: string | null;
+  roles: number[] | null;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private apiUrl = '/api/auth';
-  
-  // Subject to notify components to reload current user info
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  // Observable that components can subscribe to
+
+  // holds currently logged-in user (or null/guest)
+  private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  whoami(): Observable<User> {
-    return this.http.get<User>(this.apiUrl).pipe(
+  /**
+   * Check current session (who am I)
+   */
+  whoami(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(this.apiUrl).pipe(
+      tap(user => {
+        // backend returns { username: null, roles: null } for guests
+        this.currentUserSubject.next(
+          user.username ? user : null
+        );
+      })
+    );
+  }
+
+  /**
+   * Login with username & password
+   */
+  login(username: string, password: string): Observable<AuthUser> {
+    return this.http.post<AuthUser>(this.apiUrl, { username, password }).pipe(
       tap(user => this.currentUserSubject.next(user))
     );
   }
 
-  login(user: User): Observable<User> {
-    return this.http.post<User>(this.apiUrl, user).pipe(
-      tap(user => this.currentUserSubject.next(user))
+  /**
+   * Logout current session
+   */
+  logout(): Observable<void> {
+    return this.http.delete<void>(this.apiUrl).pipe(
+      tap(() => this.currentUserSubject.next(null))
     );
   }
 
-  logout(): Observable<User> {
-    return this.http.delete<User>(this.apiUrl).pipe(
-      tap(user => this.currentUserSubject.next(user))
-    );
+  /**
+   * Synchronous helpers
+   */
+  get currentUser(): AuthUser | null {
+    return this.currentUserSubject.value;
   }
 
-  isInRole(user: User | null, roles: number[]): boolean {
+  isLoggedIn(): boolean {
+    return !!this.currentUser?.username;
+  }
+
+  hasRole(role: number): boolean {
+    return !!this.currentUser?.roles?.includes(role);
+  }
+
+  hasAnyRole(roles: number[]): boolean {
     if (!roles || roles.length === 0) return true;
-    if (!user?.roles) return false;
-    return user.roles.some((role: number) => roles?.includes(role));
-  }  
+    return roles.some(r => this.currentUser?.roles?.includes(r));
+  }
 
-  isRouteAvailable(user: User | null, route: AppRoute): boolean {
-    return this.isInRole(user!, route.roles || []);
+  /**
+   * Used by routing/menu visibility
+   */
+  isRouteAvailable(route: AppRoute): boolean {
+    return this.hasAnyRole(route.roles || []);
   }
 }
