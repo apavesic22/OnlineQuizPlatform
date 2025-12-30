@@ -1,28 +1,32 @@
 <div class="home-container">
   @if (loading) {
-    <p>Loading quizzes...</p>
+  <p>Loading quizzes...</p>
   } @else {
-    <div class="quiz-grid">
-      @for (quiz of quizzes; track quiz.quiz_id) {
-        <mat-card class="quiz-card">
-          <mat-card-title>{{ quiz.quiz_name }}</mat-card-title>
-          <mat-card-subtitle>
-            {{ quiz.category_name }} · {{ quiz.difficulty }}
-          </mat-card-subtitle>
+  <div class="quiz-grid">
+    @for (quiz of quizzes; track quiz.quiz_id) {
+    <mat-card class="quiz-card">
+      <mat-card-title>{{ quiz.quiz_name }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ quiz.category_name }} · {{ quiz.difficulty }}
+      </mat-card-subtitle>
 
-          <mat-card-content>
-            <p>Questions: {{ quiz.question_count }}</p>
-            <p>Duration: {{ quiz.duration }} sec</p>
-            <p>By: {{ quiz.creator }}</p>
-          </mat-card-content>
+      <mat-card-content>
+        <p>Questions: {{ quiz.question_count }}</p>
+        <p>Duration: {{ quiz.duration }} sec</p>
+        <p>By: {{ quiz.creator }}</p>
+      </mat-card-content>
 
-          <mat-card-actions>
-            <button mat-raised-button color="primary">
-              Play
-            </button>
-          </mat-card-actions>
-        </mat-card>
-      }
-    </div>
+      <mat-card-actions>
+        <button
+          mat-raised-button
+          color="primary"
+          [routerLink]="['/play', quiz.quiz_id]"
+        >
+          Play
+        </button>
+      </mat-card-actions>
+    </mat-card>
+    }
+  </div>
   }
 </div>
