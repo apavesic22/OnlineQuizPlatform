@@ -1,4 +1,20 @@
 <div class="play-container">
-  <h2>Quiz {{ quizId }}</h2>
-  <p>Loading questions...</p>
+  @if (loading) {
+    <p>Loading quiz...</p>
+  } @else if (currentQuestion) {
+
+    <h2>Question {{ currentIndex + 1 }} / {{ questions.length }}</h2>
+
+    <div class="question-text">
+      {{ currentQuestion.question_text }}
+    </div>
+
+    <div class="answers">
+      @for (answer of currentQuestion.answers; track answer.answer_id) {
+        <button mat-raised-button class="answer-btn">
+          {{ answer.answer_text }}
+        </button>
+      }
+    </div>
+  }
 </div>

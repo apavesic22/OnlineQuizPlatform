@@ -447,6 +447,74 @@ quizzesRouter.delete("/:id", async (req, res) => {
   }
 });
 
+quizzesRouter.get('/:id/questions', async (req, res) => {
+  try {
+    if (!db.connection) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const quizId = Number(req.params.id);
+    if (Number.isNaN(quizId)) {
+      return res.status(400).json({ error: 'Invalid quiz id' });
+    }
+
+    // ---- quiz exists ----
+    const quiz = await db.connection.get(
+      `SELECT quiz_id FROM QUIZZES WHERE quiz_id = ?`,
+      [quizId]
+    );
+
+    if (!quiz) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+
+    // ---- fetch questions ----
+    const questions = await db.connection.all<{
+      question_id: number;
+      question_text: string;
+      time_limit: number;
+      type: string;
+    }[]>(`
+      SELECT
+        q.question_id,
+        q.question_text,
+        q.time_limit,
+        qt.type
+      FROM QUESTIONS q
+      JOIN QUESTION_TYPES qt ON qt.id = q.question_type_id
+      WHERE q.quiz_id = ?
+      ORDER BY q.position ASC
+    `, [quizId]);
+
+    if (questions.length === 0) {
+      return res.status(204).send();
+    }
+
+    // ---- attach answers ----
+    for (const q of questions) {
+      const answers = await db.connection.all(
+        `
+        SELECT
+          answer_id,
+          answer_text,
+          is_correct
+        FROM ANSWER_OPTIONS
+        WHERE question_id = ?
+        `,
+        [q.question_id]
+      );
+
+      (q as any).answers = answers;
+    }
+
+    res.status(200).json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load questions' });
+  }
+});
+
+
 quizzesRouter.get("/:id/leaderboard", async (req, res) => {
   try {
     if (!db.connection) {
