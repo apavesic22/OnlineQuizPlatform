@@ -3,7 +3,8 @@ import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from './services/auth';
 import { User } from './models/user';
 import { LoginDialog } from './dialogs/login/login';
@@ -16,6 +17,8 @@ import { LoginDialog } from './dialogs/login/login';
     MatToolbarModule,
     MatButtonModule,
     MatDialogModule,
+    MatIconModule,
+    MatMenuModule
 ],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']

@@ -9,11 +9,18 @@
   @if (!isLoggedIn) {
     <button mat-button (click)="onLogin()">Login</button>
   } @else {
-    <span class="welcome-text">
-      Welcome, <strong>{{ user?.username }}</strong>
-    </span>
-    
-    <button mat-button (click)="onLogout()">Logout</button>
+    <button mat-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+      {{ user?.username }}
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item (click)="onLogout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
   }
 </mat-toolbar>
 

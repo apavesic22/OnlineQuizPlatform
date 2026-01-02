@@ -2,14 +2,13 @@
   flex: 1 1 auto;
 }
 
-.welcome-text {
-  margin-right: 15px;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  
-  strong {
-    margin-left: 5px;
-    color: #ffd740; /* Accent color for the name */
+button[mat-button] {
+  mat-icon {
+    margin: 0 4px;
+    vertical-align: middle;
   }
+}
+
+.mat-mdc-button {
+  font-weight: 500;
 }
