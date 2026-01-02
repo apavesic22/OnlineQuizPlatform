@@ -1,17 +1,18 @@
 <mat-toolbar color="primary" class="toolbar">
-  <span class="app-title" routerLink="/home" style="cursor: pointer;">{{ title }}</span>
+  <span class="app-title" routerLink="/" style="cursor: pointer;">{{ title }}</span>
 
   <span class="spacer"></span>
 
-  <button mat-button routerLink="/home">
-    Home
-  </button>
-
+  <button mat-button routerLink="/home">Home</button>
   <button mat-button routerLink="/create">Create Quiz</button>
 
   @if (!isLoggedIn) {
     <button mat-button (click)="onLogin()">Login</button>
   } @else {
+    <span class="welcome-text">
+      Welcome, <strong>{{ user?.username }}</strong>
+    </span>
+    
     <button mat-button (click)="onLogout()">Logout</button>
   }
 </mat-toolbar>

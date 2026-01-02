@@ -1,18 +1,15 @@
-.toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.app-title {
-  font-weight: 600;
-  font-size: 1.2rem;
-}
-
 .spacer {
   flex: 1 1 auto;
 }
 
-.content {
-  padding: 16px;
+.welcome-text {
+  margin-right: 15px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  
+  strong {
+    margin-left: 5px;
+    color: #ffd740; /* Accent color for the name */
+  }
 }
