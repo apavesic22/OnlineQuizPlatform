@@ -2,7 +2,6 @@ import express from 'express';
 import morgan from 'morgan';
 import { config } from 'dotenv';
 
-import { APP_VERSION } from './shared/version';
 import { errorHandler } from './helpers/errors';
 import { openDb } from './helpers/db';
 import { authRouter, initAuth } from './helpers/auth';
@@ -56,7 +55,6 @@ async function main() {
   });
 }
 
-console.log(`Backend ${APP_VERSION} is starting...`);
 main().catch(err => {
   console.error('ERROR startup failed due to', err);
 })

@@ -1,0 +1,25 @@
+<mat-card>
+  <h2>Create Quiz</h2>
+
+  <form [formGroup]="quizForm" (ngSubmit)="onCreateQuiz()">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Quiz name</mat-label>
+      <input matInput formControlName="quiz_name">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category</mat-label>
+      <mat-select formControlName="category_id">
+        <mat-option *ngFor="let c of categories" [value]="c.category_id">
+          {{ c.category_name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit">
+      Create Quiz
+    </button>
+
+  </form>
+</mat-card>

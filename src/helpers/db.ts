@@ -507,7 +507,7 @@ if (!creator) return;
 export async function recomputeUserRanks(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
-  // Order users by score DESC (highest first)
+  
   const users: { user_id: number; total_score: number }[] = await db.connection
     .all(`
     SELECT user_id, total_score

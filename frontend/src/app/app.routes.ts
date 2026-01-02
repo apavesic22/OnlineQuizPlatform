@@ -19,13 +19,13 @@ export const routes: Route[] = [
     title: 'Play Quiz',
   },
   {
-    path: '**',
-    redirectTo: '',
-  },
-  {
     path: 'create',
     loadComponent: () =>
       import('./pages/create-quiz/create-quiz').then((m) => m.CreateQuizPage),
     title: 'Create quiz',
+  },
+  {
+    path: '**',
+    redirectTo: '',
   },
 ];
