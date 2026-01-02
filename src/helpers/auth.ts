@@ -13,6 +13,7 @@ import SQLiteStoreFactory from "connect-sqlite3";
 import { db } from "./db";
 import { User } from "../model/user";
 import { HttpError } from "./errors";
+import { recomputeUserRanks } from "./db";
 
 export const authRouter = Router();
 
@@ -32,6 +33,7 @@ authRouter.post("/register", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Database not initialized" });
     }
 
+    // Check for existing user
     const existing = await db.connection.get(
       "SELECT user_id FROM USERS WHERE username = ? OR email = ?",
       [username, email]
@@ -43,19 +45,22 @@ authRouter.post("/register", async (req: Request, res: Response) => {
 
     const passwordHash = hashPassword(password);
 
+    // 1. Insert the new user with score 0 and rank 0 initially
     await db.connection.run(
       `INSERT INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, 0, 0)`,
       [4, username, email, passwordHash, 0]
     );
 
+    // 2. Recalculate ranks to put the new user in their correct position
+    await recomputeUserRanks();
+
     res.status(201).json({ message: "Registration successful" });
   } catch (err) {
-    console.error(err);
+    console.error("Registration error:", err);
     res.status(500).json({ error: "Registration failed" });
   }
 });
-
 export function requireRole(roles: number[]): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
     const authReq = req as AuthRequest;
