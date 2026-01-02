@@ -18,10 +18,8 @@ export class QuizzesService {
 
   constructor(private http: HttpClient) {}
 
-  getQuizzes(page = 1, limit = 10): Observable<QuizResponse> {
-    return this.http.get<QuizResponse>(
-      `${this.apiUrl}?page=${page}&limit=${limit}`
-    );
+  getQuizzes(page: number = 1) {
+    return this.http.get<any>(`${this.apiUrl}?page=${page}&limit=10`);
   }
 
   getQuizQuestions(quizId: number): Observable<QuizQuestion[]> {

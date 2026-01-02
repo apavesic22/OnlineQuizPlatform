@@ -1,32 +1,58 @@
 <div class="home-container">
   @if (loading) {
-  <p>Loading quizzes...</p>
+    <p class="status-msg">Loading quizzes...</p>
+  } @else if (quizzes.length === 0) {
+    <p class="status-msg">No quizzes found.</p>
   } @else {
-  <div class="quiz-grid">
-    @for (quiz of quizzes; track quiz.quiz_id) {
-    <mat-card class="quiz-card">
-      <mat-card-title>{{ quiz.quiz_name }}</mat-card-title>
-      <mat-card-subtitle>
-        {{ quiz.category_name }} · {{ quiz.difficulty }}
-      </mat-card-subtitle>
+    <div class="quiz-grid">
+      @for (quiz of quizzes; track quiz.quiz_id) {
+        <mat-card class="quiz-card">
+          <mat-card-title>{{ quiz.quiz_name }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ quiz.category_name }} · {{ quiz.difficulty }}
+          </mat-card-subtitle>
 
-      <mat-card-content>
-        <p>Questions: {{ quiz.question_count }}</p>
-        <p>Duration: {{ quiz.duration }} sec</p>
-        <p>By: {{ quiz.creator }}</p>
-      </mat-card-content>
+          <mat-card-content>
+            <p>Questions: {{ quiz.question_count }}</p>
+            <p>Duration: {{ quiz.duration }} sec</p>
+            <p>By: {{ quiz.creator }}</p>
+          </mat-card-content>
 
-      <mat-card-actions>
-        <button
-          mat-raised-button
-          color="primary"
-          [routerLink]="['/play', quiz.quiz_id]"
-        >
-          Play
+          <mat-card-actions>
+            <button mat-raised-button color="primary" [routerLink]="['/play', quiz.quiz_id]">
+              Play
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+
+    @if (totalPages > 1) {
+      <div class="pagination-container">
+        <button 
+          mat-button 
+          (click)="loadQuizzes(currentPage - 1)" 
+          [disabled]="currentPage === 1">
+          Previous
         </button>
-      </mat-card-actions>
-    </mat-card>
+
+        @for (p of pages; track p) {
+          <button 
+            mat-mini-fab 
+            [color]="currentPage === p ? 'primary' : ''" 
+            (click)="loadQuizzes(p)"
+            class="page-num-btn">
+            {{ p }}
+          </button>
+        }
+
+        <button 
+          mat-button 
+          (click)="loadQuizzes(currentPage + 1)" 
+          [disabled]="currentPage === totalPages">
+          Next
+        </button>
+      </div>
     }
-  </div>
   }
 </div>
