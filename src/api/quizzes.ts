@@ -618,6 +618,33 @@ quizzesRouter.post(
   }
 );
 
+quizzesRouter.get("/global-leaderboard", async (req, res) => {
+  try {
+    if (!db.connection) return res.status(500).json({ error: "Database not initialized" });
+
+    // Fetch Top 10 users by total_score
+    const top10 = await db.connection.all(
+      `SELECT username, total_score, rank FROM USERS ORDER BY rank ASC LIMIT 10`
+    );
+
+    let currentUserStats = null;
+    if (req.isAuthenticated()) {
+      const user = req.user as User;
+      currentUserStats = await db.connection.get(
+        `SELECT username, total_score, rank FROM USERS WHERE user_id = ?`,
+        [user.id]
+      );
+    }
+
+    res.json({
+      top10,
+      currentUser: currentUserStats
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+});
+
 quizzesRouter.get("/:id/leaderboard", async (req, res) => {
   try {
     if (!db.connection) {

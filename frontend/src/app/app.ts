@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from './services/auth';
 import { User } from './models/user';
 import { LoginDialog } from './dialogs/login/login';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -18,10 +19,10 @@ import { LoginDialog } from './dialogs/login/login';
     MatButtonModule,
     MatDialogModule,
     MatIconModule,
-    MatMenuModule
-],
+    MatMenuModule,
+  ],
   templateUrl: './app.html',
-  styleUrls: ['./app.scss']
+  styleUrls: ['./app.scss'],
 })
 export class App implements OnInit {
   title = 'Quizify';
@@ -30,28 +31,34 @@ export class App implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       this.user = user;
     });
   }
 
   ngOnInit(): void {
     this.authService.whoami().subscribe({
-      next: () => this.loading = false,
-      error: () => this.loading = false
+      next: () => (this.loading = false),
+      error: () => (this.loading = false),
     });
   }
 
   onLogin() {
     this.dialog.open(LoginDialog, {
-      width: '400px'
+      width: '400px',
     });
   }
 
   onLogout() {
-    this.authService.logout().subscribe();
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/home']);
+      },
+      error: (err) => console.error('Logout failed', err),
+    });
   }
 
   get isLoggedIn(): boolean {

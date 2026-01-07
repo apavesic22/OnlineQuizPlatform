@@ -26,7 +26,10 @@ export class QuizzesService {
     return this.http.get<QuizQuestion[]>(`${this.apiUrl}/${quizId}/questions`);
   }
 
-  submitAnswers(quizId: number, answers: { question_id: number, answer_id: number }[]): Observable<any> {
+  submitAnswers(
+    quizId: number,
+    answers: { question_id: number; answer_id: number }[]
+  ): Observable<any> {
     return this.http.post(`${this.apiUrl}/${quizId}/submit`, { answers });
   }
 
@@ -36,5 +39,9 @@ export class QuizzesService {
 
   createQuiz(quizData: any): Observable<any> {
     return this.http.post(this.apiUrl, quizData);
+  }
+
+  getGlobalLeaderboard(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/global-leaderboard`);
   }
 }

@@ -1,0 +1,47 @@
+.leaderboard-wrapper {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.leaderboard-card {
+  width: 100%;
+  max-width: 600px;
+}
+
+table {
+  width: 100%;
+}
+
+.top-rank {
+  font-weight: bold;
+  color: #ffd700; // Gold for top ranks
+}
+
+.me-badge {
+  font-size: 0.8em;
+  background: #3f51b5;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+.highlight-me {
+  background-color: rgba(63, 81, 181, 0.1) !important;
+}
+
+.user-status-section {
+  text-align: center;
+  margin-top: 10px;
+
+  .separator { font-size: 24px; color: #999; }
+  
+  .current-user-rank {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+}

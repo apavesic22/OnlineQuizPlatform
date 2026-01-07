@@ -1,0 +1,50 @@
+<div class="leaderboard-wrapper">
+  <mat-card class="leaderboard-card">
+    <mat-card-header>
+      <mat-card-title>Global Leaderboard</mat-card-title>
+      <mat-card-subtitle>Top 10 Players</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z0">
+        
+        <ng-container matColumnDef="rank">
+          <th mat-header-cell *matHeaderCellDef> Rank </th>
+          <td mat-cell *matCellDef="let element"> 
+            <span [class.top-rank]="element.rank <= 3">#{{element.rank}}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef> User </th>
+          <td mat-cell *matCellDef="let element"> 
+             {{element.username}} 
+             @if (element.username === currentUser?.username) {
+               <span class="me-badge">(You)</span>
+             }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="score">
+          <th mat-header-cell *matHeaderCellDef> Total Score </th>
+          <td mat-cell *matCellDef="let element"> {{element.total_score}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+            [class.highlight-me]="row.username === currentUser?.username"></tr>
+      </table>
+
+      @if (currentUser && currentUser.rank > 10) {
+        <div class="user-status-section">
+          <div class="separator">...</div>
+          <div class="current-user-rank highlight-me">
+            <span class="rank">#{{currentUser.rank}}</span>
+            <span class="name">{{currentUser.username}} (You)</span>
+            <span class="score">{{currentUser.total_score}}</span>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

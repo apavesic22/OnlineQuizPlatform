@@ -19,6 +19,12 @@ export const routes: Route[] = [
     title: 'Create quiz',
   },
   {
+    path: 'leaderboard',
+    loadComponent: () =>
+      import('./pages/leaderboard-page/leaderboard.page').then((m) => m.LeaderboardPage),
+    title: 'Leaderboard',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
