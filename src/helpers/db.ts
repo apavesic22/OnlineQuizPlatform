@@ -457,10 +457,10 @@ export async function seedRealQuizzes(): Promise<void> {
            VALUES (?, ?, ?, ?, ?)`,
           [
             quizId,
-            1,                  // 1 = Multiple Choice
-            questionObj.t,      // The question text
-            i + 1,              // Position (1, 2, 3...)
-            20                  // 20 seconds per question
+            1,                  
+            questionObj.t,      
+            i + 1,              
+            15                  
           ]
         );
 
