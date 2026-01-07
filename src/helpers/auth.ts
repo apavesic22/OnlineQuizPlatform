@@ -170,6 +170,8 @@ async function findUserById(id: number): Promise<User | undefined> {
     username: row.username,
     password: row.password_hash,
     roles: [row.role_id],
+    total_score: 0,
+    rank: 0,
   };
 }
 
@@ -201,6 +203,8 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     username: row.username,
     password: row.password_hash,
     roles: [row.role_id], // single role → array
+    total_score: 0,
+    rank: 0,
   };
 }
 

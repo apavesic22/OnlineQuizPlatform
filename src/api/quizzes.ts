@@ -13,9 +13,11 @@ quizzesRouter.post("/", async (req, res) => {
     }
 
     const { quiz_name, category_id, difficulty_id, questions } = req.body;
-
-    // If user is guest, assign to ID 4 (Regular user) per your seed file
-    const userId = req.isAuthenticated() ? (req.user as any).id : 4;
+    const user = req.user as any;
+    const userId = req.isAuthenticated() ? user.user_id : 4;
+    
+    // Check if user is verified (Role ID 3)
+    const isVerified = user?.roles?.includes(3);
 
     await db.connection.run("BEGIN TRANSACTION");
 
@@ -24,19 +26,22 @@ quizzesRouter.post("/", async (req, res) => {
       `INSERT INTO QUIZZES 
       (user_id, category_id, difficulty_id, quiz_name, question_count, duration, is_customizable) 
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, category_id, difficulty_id, quiz_name, questions.length, 300, 0]
+      [userId, category_id, difficulty_id, quiz_name, questions.length, 15, 0]
     );
     const quizId = quizResult.lastID;
 
-    // 2. Loop through and insert QUESTIONS
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      const typeId = q.type === "multiple" ? 1 : 2; // 1: Multiple Choice, 2: True/False
+      const typeId = q.type === "multiple" ? 1 : 2;
+
+      // Logic for flexible time limit:
+      // Use the value from the question if user is verified, otherwise default to 15
+      const timeLimit = isVerified && q.time_limit ? q.time_limit : 15;
 
       const qResult = await db.connection.run(
         `INSERT INTO QUESTIONS (quiz_id, question_type_id, question_text, position, time_limit) 
          VALUES (?, ?, ?, ?, ?)`,
-        [quizId, typeId, q.text, i + 1, 15]
+        [quizId, typeId, q.text, i + 1, timeLimit]
       );
       const questionId = qResult.lastID;
 

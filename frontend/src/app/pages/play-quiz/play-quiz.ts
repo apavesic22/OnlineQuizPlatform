@@ -79,7 +79,7 @@ export class PlayQuizPage implements OnInit, OnDestroy {
 
   startTimer() {
     this.stopTimer();
-    this.timeLeft = this.currentQuestion.time_limit ?? 15;
+    this.timeLeft = this.currentQuestion.time_limit || 15;
 
     this.timerSub = interval(1000).subscribe(() => {
       this.timeLeft--;

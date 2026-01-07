@@ -360,7 +360,6 @@ export async function seedUsers(): Promise<void> {
   // --- faker users count (env or default) ---
   const FAKE_USERS_COUNT = parseInt(process.env.DBFAKEUSERS || "20");
 
-  // --- insert fixed users ---
   for (const u of seed) {
     await db.connection.run(
       `INSERT OR IGNORE INTO USERS
@@ -378,7 +377,6 @@ export async function seedUsers(): Promise<void> {
     );
   }
 
-  // --- insert faker users ---
   for (let i = 0; i < FAKE_USERS_COUNT; i++) {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
@@ -419,7 +417,6 @@ export async function seedUsers(): Promise<void> {
 export async function seedRealQuizzes(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
-  // 1. Get the default creator (Regular User ID 4)
   const creator = await db.connection.get<{ user_id: number }>(
     `SELECT user_id FROM USERS WHERE user_id = 4 LIMIT 1`
   );
@@ -428,27 +425,23 @@ export async function seedRealQuizzes(): Promise<void> {
     return;
   }
 
-  // 2. Clear existing quizzes to avoid duplicates (Optional but recommended for testing)
-  // await db.connection.run("DELETE FROM QUIZZES"); 
-
   console.log("Starting to seed real quiz data...");
 
   try {
     await db.connection.run("BEGIN TRANSACTION");
 
     for (const quiz of quizData) {
-      // Insert the Quiz
       const quizResult = await db.connection.run(
         `INSERT INTO QUIZZES 
           (user_id, category_id, difficulty_id, quiz_name, question_count, duration) 
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
           creator.user_id,
-          quiz.cat,        // Category ID from your array
-          quiz.diff,       // Difficulty ID from your array
-          quiz.name,       // Quiz Name
-          quiz.qs.length,  // Count of questions
-          300              // 5 minutes duration
+          quiz.cat,        
+          quiz.diff,       
+          quiz.name,       
+          quiz.qs.length,  
+          15              
         ]
       );
 

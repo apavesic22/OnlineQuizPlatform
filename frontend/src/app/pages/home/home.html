@@ -14,7 +14,7 @@
 
           <mat-card-content>
             <p>Questions: {{ quiz.question_count }}</p>
-            <p>Duration: {{ quiz.duration }} sec</p>
+            <p>Question duration: {{ quiz.duration || 15 }} seconds</p>
             <p>By: {{ quiz.creator }}</p>
           </mat-card-content>
 
