@@ -57,21 +57,19 @@ export const categoriesTableDef = {
   },
 };
 
-export const categorySuggestionsTableDef = {
-  name: "CATEGORY_SUGGESTIONS",
+export const suggestionsTableDef = {
+  name: "SUGGESTIONS",
   columns: {
     suggestion_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
-
     user_id: { type: "INTEGER", notNull: true },
-    name: { type: "TEXT", notNull: true },
-
+    title: { type: "TEXT", notNull: true }, 
+    description: { type: "TEXT", notNull: true }, 
     status: {
       type: "TEXT",
       notNull: true,
       default: "pending",
       check: "status IN ('pending','approved','rejected')",
     },
-
     created_at: {
       type: "DATETIME",
       notNull: true,
@@ -85,7 +83,6 @@ export const categorySuggestionsTableDef = {
     { column: "reviewer_id", references: "USERS(user_id)" },
   ],
 };
-
 export const questionTypesTableDef = {
   name: "QUESTION_TYPES",
   columns: {
@@ -562,7 +559,6 @@ export async function seedCategories(): Promise<void> {
 
 const indexStatements = [
   `CREATE INDEX IF NOT EXISTS idx_users_role ON USERS(role_id);`,
-  `CREATE INDEX IF NOT EXISTS idx_category_suggestions_status ON CATEGORY_SUGGESTIONS(status);`,
 
   `CREATE INDEX IF NOT EXISTS idx_questions_type ON QUESTIONS(question_type_id);`,
   `CREATE INDEX IF NOT EXISTS idx_questions_quiz ON QUESTIONS(quiz_id);`,
@@ -596,8 +592,8 @@ export async function createSchemaAndData(): Promise<void> {
   await seedCategories();
   console.log("Categories table created");
 
-  await db.connection.exec(createTableStatement(categorySuggestionsTableDef));
-  console.log("Category suggestions table created");
+  await db.connection.exec(createTableStatement(suggestionsTableDef));
+  console.log("Suggestions table created");
 
   await db.connection.exec(createTableStatement(questionTypesTableDef));
   await seedQuestionTypes();
