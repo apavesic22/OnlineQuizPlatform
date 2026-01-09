@@ -2,13 +2,42 @@
   flex: 1 1 auto;
 }
 
-button[mat-button] {
-  mat-icon {
-    margin: 0 4px;
-    vertical-align: middle;
-  }
-}
-
 .mat-mdc-button {
   font-weight: 500;
+}
+
+/* Fix for the badge icon */
+.verified-badge {
+  color: #1d9bf0 !important;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-left: 4px;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Ensure the button content aligns perfectly */
+button[mat-button] {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Container for the button content */
+.user-button ::ng-deep .mat-mdc-button-touch-target {
+  display: none; /* Removes extra padding if using newer Material */
+}
+
+.user-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px; /* Space between badge/icon and name */
+}
+/* Space out the elements */
+.username-text {
+  font-weight: 500;
+}
+
+.dropdown-icon {
+  margin-left: -4px; /* Pulls the arrow closer to the name/badge */
 }

@@ -3,4 +3,5 @@ export interface User {
   roles?: number[];
   total_score?: number;
   rank?: number;
+  role_id: number;
 }

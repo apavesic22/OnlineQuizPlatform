@@ -28,7 +28,7 @@ import { MatDividerModule } from '@angular/material/divider';
 })
 export class App implements OnInit {
   title = 'Quizify';
-  user: User | null = null;
+  user: any = null;
   loading = true;
 
   constructor(

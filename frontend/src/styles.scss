@@ -17,3 +17,11 @@ $quizify-theme: mat.m2-define-light-theme((
 
 /* Apply theme */
 @include mat.all-component-themes($quizify-theme);
+
+.verified-badge {
+  color: #1d9bf0; /* Official "Twitter-style" blue */
+  font-size: 18px;
+  vertical-align: middle;
+  margin-left: 4px;
+  cursor: pointer;
+}

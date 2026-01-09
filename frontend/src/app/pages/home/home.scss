@@ -90,3 +90,17 @@
     box-shadow: none;
   }
 }
+
+.verified-badge {
+  color: #1d9bf0; 
+  font-size: 16px;  
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+}

@@ -15,9 +15,10 @@ quizzesRouter.post("/", async (req, res) => {
       req.body;
     const user = req.user as any;
 
+    const userRole = user?.role_id || (Array.isArray(user?.roles) ? user.roles[0] : null);
     // Check roles: 1=Admin, 2=Management, 3=Verified
     const isVerifiedOrStaff = user?.roles?.some((r: number) =>
-      [1, 2, 3].includes(r)
+      [1, 2, 3].includes(userRole)
     );
 
     const finalDuration = isVerifiedOrStaff
@@ -32,9 +33,12 @@ quizzesRouter.post("/", async (req, res) => {
       });
     }
 
-    const userId = req.isAuthenticated()
-      ? user.user_id || user.id // Tries user_id first, then id
-      : 4;
+    let userId: number = 4; 
+    if (req.isAuthenticated() && user) {
+      userId = user.user_id || user.id; // Tries both common naming conventions
+    }
+
+    console.log(`Creating quiz: "${quiz_name}" for User ID: ${userId} (Role: ${userRole})`);
     await db.connection.run("BEGIN TRANSACTION");
 
     // 1. Insert into QUIZZES table using provided difficulty_id
@@ -147,7 +151,7 @@ quizzesRouter.get("/", async (req, res) => {
         q.created_at,
         c.category_name,
         d.difficulty,
-        
+        u.role_id,
         CASE WHEN u.user_id = 4 THEN 'Guest' ELSE u.username END AS creator,
 
         COUNT(ql.user_id) AS likes,
@@ -231,7 +235,8 @@ quizzesRouter.get("/category/:category", async (req, res) => {
         q.is_customizable,
         q.created_at,
         d.difficulty,
-        u.username AS creator
+        u.username AS creator,
+        u.role_id
       FROM QUIZZES q
       JOIN QUIZ_DIFFICULTIES d ON d.id = q.difficulty_id
       JOIN USERS u ON u.user_id = q.user_id

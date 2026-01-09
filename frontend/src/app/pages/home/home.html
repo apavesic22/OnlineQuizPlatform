@@ -24,7 +24,11 @@
           <span>{{ quiz.duration || 15 }}s per question</span>
         </div>
         <div class="info-row">
+          @if (quiz.role_id >= 1 && quiz.role_id <= 3) {
+          <mat-icon class="verified-badge">verified</mat-icon>
+          } @else {
           <mat-icon>person</mat-icon>
+          }
           <span>By: {{ quiz.creator }}</span>
         </div>
       </mat-card-content>
