@@ -4,11 +4,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { QuizzesService } from '../../services/quizzesService';
-import { Quiz } from '../../models/quiz';
 import { HttpClient } from '@angular/common/http';
 import { MatIcon } from '@angular/material/icon';
 import { AuthService } from '../../services/auth';
 import { Subscription } from 'rxjs';
+import { User } from '../../models/user';
 
 @Component({
   selector: 'home-page',

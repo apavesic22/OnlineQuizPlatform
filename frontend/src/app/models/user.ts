@@ -4,4 +4,5 @@ export interface User {
   total_score?: number;
   rank?: number;
   role_id: number;
+  verified: number;
 }

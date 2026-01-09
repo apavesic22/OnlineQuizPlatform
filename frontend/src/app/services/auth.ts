@@ -18,15 +18,27 @@ export class AuthService {
   }
 
   whoami(): Observable<User> {
-    return this.http
-      .get<User>(this.apiUrl)
-      .pipe(tap((user) => this.currentUserSubject.next(user)));
+    return this.http.get<User>(this.apiUrl).pipe(
+      map((user) => {
+        if (user && user.roles && user.roles.length > 0) {
+          user.role_id = user.roles[0];
+        }
+        return user;
+      }),
+      tap((user) => this.currentUserSubject.next(user))
+    );
   }
 
   login(username: string, password: string): Observable<User> {
-    return this.http
-      .post<User>(this.apiUrl, { username, password })
-      .pipe(tap((user) => this.currentUserSubject.next(user)));
+    return this.http.post<User>(this.apiUrl, { username, password }).pipe(
+      map((user) => {
+        if (user && user.roles && user.roles.length > 0) {
+          user.role_id = user.roles[0];
+        }
+        return user;
+      }),
+      tap((user) => this.currentUserSubject.next(user))
+    );
   }
 
   logout(): Observable<void> {
