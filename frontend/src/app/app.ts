@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
-
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from './services/auth';
 import { LoginDialog } from './dialogs/login/login';
 import { SuggestionDialogComponent } from './dialogs/suggestions/suggestions';
@@ -39,7 +39,8 @@ export class App implements OnInit {
   constructor(
     private authService: AuthService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
@@ -55,20 +56,28 @@ export class App implements OnInit {
     });
   }
 
-  openSuggestionDialog() {
-    const dialogRef = this.dialog.open(SuggestionDialogComponent, {
-      width: '500px',
-      data: { title: '', description: '' },
-    });
+openSuggestionDialog() {
+  const dialogRef = this.dialog.open(SuggestionDialogComponent, {
+    width: '500px',
+    data: { title: '', description: '' },
+  });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        console.log('Suggestion result:', result);
-        // Logic to send result to backend goes here
-      }
-    });
-  }
-
+  dialogRef.afterClosed().subscribe((result) => {
+    if (result && this.user) {
+      // YOU NEED THIS PART:
+      const payload = {
+        user_id: this.user.user_id, // Link to the logged-in user
+        title: result.title,
+        description: result.description
+      };
+      
+      this.http.post('/api/suggestions', payload).subscribe({
+        next: () => console.log('Saved to database!'),
+        error: (err: any) => console.error('Failed to save', err)
+      });
+    }
+  });
+}
   onLogin() {
     this.dialog.open(LoginDialog, {
       width: '400px',

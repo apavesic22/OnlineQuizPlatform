@@ -508,6 +508,37 @@ export async function recomputeUserRanks(): Promise<void> {
   console.log("User ranks recomputed");
 }
 
+export async function getCategoryLeaderboard(categoryId: number): Promise<any[]> {
+  if (!db.connection) throw new Error("DB not open");
+
+  let query = `
+    SELECT 
+      u.username, 
+      u.role_id,
+      u.verified,
+      SUM(qa.score) as total_score, 
+      COUNT(qa.attempt_id) as quizzes_completed
+    FROM USERS u
+    JOIN QUIZ_ATTEMPTS qa ON u.user_id = qa.user_id
+    JOIN QUIZZES q ON qa.quiz_id = q.quiz_id
+  `;
+
+  const params: any[] = [];
+
+  if (categoryId !== 0) {
+    query += ` WHERE q.category_id = ? `;
+    params.push(categoryId);
+  }
+
+  query += `
+    GROUP BY u.user_id
+    ORDER BY total_score DESC
+    LIMIT 10
+  `;
+
+  return await db.connection.all(query, params);
+}
+
 function seedQuizDifficulties() {
   if (!db.connection) throw new Error("DB not open");
 
