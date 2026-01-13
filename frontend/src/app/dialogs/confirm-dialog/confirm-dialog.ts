@@ -1,18 +1,21 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule, CommonModule],
   template: `
     <h2 mat-dialog-title>Confirm Action</h2>
-    <mat-dialog-content>{{ data.message }}</mat-dialog-content>
+    <mat-dialog-content>
+      <p>{{ data.message }}</p>
+    </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button [mat-dialog-close]="false">Cancel</button>
       <button mat-raised-button 
-              [color]="data.color || 'warn'" 
+              [color]="data.color || 'primary'" 
               [mat-dialog-close]="true">
         {{ data.buttonText || 'Confirm' }}
       </button>
@@ -20,5 +23,9 @@ import { MatButtonModule } from '@angular/material/button';
   `
 })
 export class ConfirmDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string, buttonText?: string, color?: string }) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { 
+    message: string, 
+    buttonText?: string, 
+    color?: string 
+  }) {}
 }

@@ -8,8 +8,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../../dialogs/confirm-dialog/confirm-dialog';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-import { MatFormField, MatLabel } from '@angular/material/input';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatFormField, MatLabel, MatInputModule } from '@angular/material/input';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-manage-users',
@@ -21,7 +21,8 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
     MatIconModule,
     MatFormField,
     MatLabel,
-    MatPaginator
+    MatPaginator,
+    MatInputModule
   ],
   templateUrl: './manage-users.html',
   styleUrls: ['./manage-users.scss'],
@@ -76,14 +77,14 @@ export class ManageUsersPage implements OnInit {
     this.loading = true;
     const pageForApi = this.currentPage + 1;
     const url = `/api/users?page=${pageForApi}&limit=${this.pageSize}&search=${this.searchQuery}`;
-    
+
     this.http.get<any>(url).subscribe({
       next: (res) => {
         this.users = res.data; // Assign from 'data' property
         this.totalUsers = res.total; // Update total count for paginator
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => (this.loading = false),
     });
   }
 
@@ -98,14 +99,13 @@ export class ManageUsersPage implements OnInit {
       data: {
         message: `Are you sure you want to ${actionText} ${user.username}?`,
         buttonText: buttonLabel, 
-        color: buttonColor,
+        color: buttonColor, 
       },
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         const newStatus = isCurrentlyVerified ? 0 : 1;
-
         this.http
           .put(`/api/users/${user.username}`, { verified: newStatus })
           .subscribe({
