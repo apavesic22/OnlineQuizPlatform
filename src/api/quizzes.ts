@@ -14,6 +14,7 @@ quizzesRouter.post("/", async (req, res) => {
     const { quiz_name, category_id, difficulty_id, questions, duration } =
       req.body;
     const user = req.user as any;
+    const performerName = user?.username || "Unknown user";
 
     const userRole = user?.role_id || (Array.isArray(user?.roles) ? user.roles[0] : null);
     // Check roles: 1=Admin, 2=Management, 3=Verified
@@ -57,6 +58,14 @@ quizzesRouter.post("/", async (req, res) => {
       ]
     );
     const quizId = quizResult.lastID;
+
+    const logMessage = `${performerName} created a quiz named: ${quiz_name}`;
+
+    await db.connection.run(
+      `INSERT INTO LOGS (action_performer, action, time_of_action, user_id, quiz_id) 
+       VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)`,
+      [performerName, logMessage, userId, quizId]
+    );
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
