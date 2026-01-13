@@ -44,15 +44,18 @@ export class App implements OnInit {
   ) {
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
-      this.isLoggedIn = !!user; // Automatically set true if user exists, false if null
-      console.log('Current User Data:', this.user);
+      this.isLoggedIn = !!(user && user.username); // Automatically set true if user exists, false if null
+      console.log('App Auth Update:', this.isLoggedIn ? 'User Logged In' : 'No User');
     });
   }
 
   ngOnInit(): void {
     this.authService.whoami().subscribe({
       next: () => (this.loading = false),
-      error: () => (this.loading = false),
+      error: () => {
+        this.loading = false;
+        this.isLoggedIn = false;
+      }
     });
   }
 
@@ -87,9 +90,16 @@ openSuggestionDialog() {
   onLogout() {
     this.authService.logout().subscribe({
       next: () => {
+        this.isLoggedIn = false;
+        this.user = null;
         this.router.navigate(['/home']);
       },
-      error: (err) => console.error('Logout failed', err),
+      error: (err) => {
+        console.error('Logout failed', err);
+        this.isLoggedIn = false;
+        this.user = null;
+        this.router.navigate(['/home']);
+      }
     });
   }
 }
