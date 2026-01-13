@@ -1,5 +1,7 @@
 <mat-toolbar color="primary" class="toolbar">
-  <span class="app-title" routerLink="/" style="cursor: pointer">{{ title }}</span>
+  <span class="app-title" routerLink="/" style="cursor: pointer"
+    >{{ title }}</span
+  >
   <span class="spacer"></span>
 
   <div class="nav-buttons">
@@ -7,45 +9,53 @@
     <button mat-button routerLink="/create">Create Quiz</button>
 
     @if (isLoggedIn && user) {
-      <button mat-button routerLink="/leaderboard">
-        <mat-icon>leaderboard</mat-icon>
-        <span>Leaderboard</span>
-      </button>
+    <button mat-button routerLink="/leaderboard">
+      <mat-icon>leaderboard</mat-icon>
+      <span>Leaderboard</span>
+    </button>
 
-      @if (user.role_id <= 3) {
-        <button mat-button (click)="openSuggestionDialog()">
-          <mat-icon>lightbulb</mat-icon>
-          <span>Suggestions</span>
-        </button>
+    @if (user.role_id <= 3) {
+    <button mat-button (click)="openSuggestionDialog()">
+      <mat-icon>lightbulb</mat-icon>
+      <span>Suggestions</span>
+    </button>
+    }
+
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
+      @if (user.role_id === 1) {
+      <mat-icon class="admin-badge" title="Administrator"
+        >admin_panel_settings</mat-icon
+      >
+      } @else if (user.role_id === 2) {
+      <mat-icon class="manager-badge" title="Management"
+        >manage_accounts</mat-icon
+      >
+      } @else if (user.role_id === 3) {
+      <mat-icon class="verified-badge" title="Verified User">verified</mat-icon>
+      } @else {
+      <mat-icon>account_circle</mat-icon>
       }
 
-      <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
-        @if (user.role_id <= 3) {
-          <mat-icon class="verified-badge">verified</mat-icon>
-        } @else {
-          <mat-icon>account_circle</mat-icon>
-        }
-        <span class="username-text">{{ user.username }}</span>
-        <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+      <span class="username-text">{{ user.username }}</span>
+      <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item routerLink="/profile">
+        <mat-icon>account_circle</mat-icon>
+        <span>My Profile</span>
       </button>
-
-      <mat-menu #userMenu="matMenu">
-        <button mat-menu-item routerLink="/profile">
-          <mat-icon>account_circle</mat-icon>
-          <span>My Profile</span>
-        </button>
-        <button mat-menu-item routerLink="/my-stats">
-          <mat-icon>bar_chart</mat-icon>
-          <span>My Quiz Stats</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="onLogout()">
-          <mat-icon>logout</mat-icon>
-          <span>Logout</span>
-        </button>
-      </mat-menu>
+      <button mat-menu-item routerLink="/my-stats">
+        <mat-icon>bar_chart</mat-icon>
+        <span>My Quiz Stats</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="onLogout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
     } @else {
-      <button mat-button (click)="onLogin()">Login</button>
+    <button mat-button (click)="onLogin()">Login</button>
     }
   </div>
 </mat-toolbar>
