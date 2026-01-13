@@ -6,7 +6,7 @@
 
   <div class="nav-buttons">
     <button mat-button routerLink="/home">Home</button>
-    @if (isLoggedIn && user && user.role_id !== 2) {
+    @if (user && user.role_id !== 2) {
     <button mat-button routerLink="/create">Create Quiz</button>
     } @if (isLoggedIn && user) {
     <button mat-button routerLink="/leaderboard">
@@ -19,11 +19,29 @@
       <mat-icon>lightbulb</mat-icon>
       <span>Suggestions</span>
     </button>
-    } @if (isLoggedIn && user && (user.role_id === 1 || user.role_id === 2)) {
-    <button mat-button routerLink="/manage-suggestions">
-      <span>Manage Suggestions</span>
-    </button>
     }
+
+    @if (isLoggedIn && user && (user.role_id === 1 || user.role_id === 2)) {
+    <button mat-button [matMenuTriggerFor]="manageMenu">
+      <span>Manage</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+
+    <mat-menu #manageMenu="matMenu">
+      <button mat-menu-item routerLink="/manage-users">
+        <mat-icon>people</mat-icon>
+        <span>Manage Users</span>
+      </button>
+      <button mat-menu-item routerLink="/manage-categories">
+        <mat-icon>category</mat-icon>
+        <span>Manage Categories</span>
+      </button>
+      <button mat-menu-item routerLink="/manage-suggestions">
+        <mat-icon>rate_review</mat-icon>
+        <span>Manage Suggestions</span>
+      </button>
+    </mat-menu>
+  }
 
     <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
       @if (user.role_id === 1) {
