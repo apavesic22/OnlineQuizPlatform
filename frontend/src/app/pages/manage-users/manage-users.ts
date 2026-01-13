@@ -104,25 +104,20 @@ export class ManageUsersPage implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        const newStatus = isCurrentlyVerified ? 0 : 1;
-        this.http
-          .put(`/api/users/${user.username}`, { verified: newStatus })
-          .subscribe({
-            next: () => {
-              user.verified = newStatus;
-              this.snackBar.open(
-                `User ${user.username} is now ${
-                  newStatus === 1 ? 'verified' : 'unverified'
-                }.`,
-                'OK',
-                { duration: 2000 }
-              );
-            },
-            error: (err) =>
-              this.snackBar.open(err.error.error || 'Update failed', 'Close'),
-          });
-      }
+  if (confirmed) {
+    const newStatus = isCurrentlyVerified ? 0 : 1;
+    this.http.put(`/api/users/${user.username}`, { verified: newStatus }).subscribe({
+      next: (res: any) => {
+        user.verified = res.verified !== undefined ? res.verified : newStatus;
+        
+        this.snackBar.open(
+          `User ${user.username} is now ${user.verified === 1 ? 'verified' : 'unverified'}.`,
+          'OK', { duration: 2000 }
+        );
+      },
+      error: (err) => this.snackBar.open(err.error?.error || 'Update failed', 'Close')
     });
+  }
+});
   }
 }

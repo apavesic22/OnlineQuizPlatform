@@ -35,7 +35,10 @@ usersRouter.get("/", requireRole([1, 2]), async (req, res) => {
     }
 
     // 3. Get total count for the paginator
-    const totalRow = await db.connection.get<{ count: number }>(countQuery, params);
+    const totalRow = await db.connection.get<{ count: number }>(
+      countQuery,
+      params
+    );
     const total = totalRow?.count ?? 0;
 
     // 4. Add pagination to the main query
@@ -43,14 +46,14 @@ usersRouter.get("/", requireRole([1, 2]), async (req, res) => {
     const queryParams = [...params, limit, offset];
 
     const users = await db.connection.all(query, queryParams);
-    
+
     // 5. Return structured response with metadata
     res.json({
       data: users,
       total: total,
       page: page,
-      totalPages: Math.ceil(total / limit)
-    }); 
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch users" });
@@ -186,47 +189,21 @@ usersRouter.get("/:username", requireRole([1, 2]), async (req, res) => {
 
 usersRouter.put("/:username", requireRole([1, 2]), async (req, res) => {
   try {
-    if (!db.connection) {
+    if (!db.connection)
       return res.status(500).json({ error: "Database not initialized" });
-    }
 
     const { username } = req.params;
     const { email, role_id, verified } = req.body;
+    const performer = req.user as User;
+    // Ensure we have a valid string for the performer
+    const performerName = performer?.username || "System admin";
 
-    if (
-      email === undefined &&
-      role_id === undefined &&
-      verified === undefined
-    ) {
-      return res.status(204).send();
-    }
-
-    if (
-      (role_id !== undefined && typeof role_id !== "number") ||
-      (verified !== undefined && ![0, 1].includes(verified))
-    ) {
-      return res.status(400).json({ error: "Invalid fields" });
-    }
-
-    const user = await db.connection.get(
-      `SELECT user_id FROM USERS WHERE username = ?`,
+    const targetUser = await db.connection.get(
+      `SELECT user_id, verified FROM USERS WHERE username = ?`,
       [username]
     );
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (role_id !== undefined) {
-      const role = await db.connection.get(
-        `SELECT role_id FROM USER_ROLES WHERE role_id = ?`,
-        [role_id]
-      );
-
-      if (!role) {
-        return res.status(400).json({ error: "Invalid role_id" });
-      }
-    }
+    if (!targetUser) return res.status(404).json({ error: "User not found" });
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -235,27 +212,46 @@ usersRouter.put("/:username", requireRole([1, 2]), async (req, res) => {
       updates.push("email = ?");
       values.push(email);
     }
-
     if (role_id !== undefined) {
       updates.push("role_id = ?");
       values.push(role_id);
     }
-
     if (verified !== undefined) {
       updates.push("verified = ?");
       values.push(verified);
     }
 
+    // If no data was sent at all, return early
+    if (updates.length === 0)
+      return res.status(400).json({ error: "No fields provided for update" });
+
     values.push(username);
 
+    // Perform the update
     await db.connection.run(
       `UPDATE USERS SET ${updates.join(", ")} WHERE username = ?`,
       values
     );
 
-    res.status(200).json({ message: "User updated successfully" });
+    // LOGGING: Use performerName (the fallback) instead of performer.username
+    if (verified !== undefined && verified !== targetUser.verified) {
+      const actionType = verified === 1 ? "verified" : "unverified";
+      const logMessage = `${performerName} made ${username} a ${actionType} user.`;
+
+      await db.connection.run(
+        `INSERT INTO LOGS (action_performer, action, time_of_action, user_id, quiz_id) 
+     VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)`,
+        [performerName, logMessage, targetUser.user_id, null] // Added 'null' as the 5th value
+      );
+    }
+
+    // Always return the updated 'verified' status so frontend can sync on the 1st click
+    res.status(200).json({
+      message: "User updated successfully",
+      verified: verified,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Update Error:", err);
     res.status(500).json({ error: "Failed to update user" });
   }
 });

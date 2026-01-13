@@ -204,7 +204,7 @@ export const logsTableDef = {
     time_of_action: { type: "DATETIME", defaultRaw: "CURRENT_TIMESTAMP" },
 
     user_id: { type: "INTEGER", notNull: true },
-    quiz_id: { type: "INTEGER", notNull: true },
+    quiz_id: { type: "INTEGER"},
   },
   foreignKeys: [
     { column: "user_id", references: "USERS(user_id)" },
