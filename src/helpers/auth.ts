@@ -150,6 +150,7 @@ async function findUserById(id: number): Promise<User | undefined> {
     username: string;
     password_hash: string;
     role_id: number;
+    verified: number;
     email: string;
   }>(
     `
@@ -158,6 +159,7 @@ async function findUserById(id: number): Promise<User | undefined> {
       u.username,
       u.password_hash,
       u.role_id,
+      u.verified,
       u.email
     FROM USERS u
     WHERE u.user_id = ?
@@ -173,6 +175,7 @@ async function findUserById(id: number): Promise<User | undefined> {
     password: row.password_hash,
     roles: [row.role_id],
     email: row.email,
+    verified: row.verified,
     total_score: 0,
     rank: 0,
   };
@@ -186,6 +189,7 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     username: string;
     password_hash: string;
     role_id: number;
+    verified: number;
     email: string;
   }>(
     `
@@ -210,6 +214,7 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     roles: [row.role_id], // single role → array
     email: row.email,
     total_score: 0,
+    verified: row.verified,
     rank: 0,
   };
 }
@@ -227,26 +232,7 @@ passport.deserializeUser(async (id: number, done) => {
     done(err);
   }
 });
-/**
- * @api {post} /api/auth Login user
- * @apiGroup Authentication
- * @apiName Login
- *
- * @apiDescription
- * Authenticates a user using JSON body credentials.
- * The endpoint expects credentials formatted according to the JSON strategy
- * of Passport (`{ "username": "...", "password": "..." }`).
- *
- * @apiBody {String} username User's login name
- * @apiBody {String} password User's password
- *
- * @apiSuccess {String} message Successful login message
- * @apiSuccess {String} username Authenticated user's username
- * @apiSuccess {Number[]} roles List of numeric role identifiers assigned to the user
- *
- * @apiError (401) Unauthorized Invalid credentials
- * @apiUse HttpError
- */
+
 authRouter.post(
   "",
   passport.authenticate("json"),
@@ -257,6 +243,7 @@ authRouter.post(
       username: authReq.user?.username,
       roles: authReq.user?.roles,
       email: authReq.user?.email,
+      verified: authReq.user?.verified,
     });
   }
 );
@@ -299,8 +286,8 @@ authRouter.delete("", (req: Request, res: Response, next: NextFunction) => {
 authRouter.get("", (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
     const user = req.user as User;
-    res.json({ username: user.username, roles: user.roles, email: user.email });
+    res.json({ username: user.username, roles: user.roles, email: user.email, verified: user.verified });
   } else {
-    res.json({ username: null, roles: null, email: null });
+    res.json({ username: null, roles: null, email: null, verified: 0 });
   }
 });

@@ -16,7 +16,8 @@ quizzesRouter.post("/", async (req, res) => {
     const user = req.user as any;
     const performerName = user?.username || "Unknown user";
 
-    const userRole = user?.role_id || (Array.isArray(user?.roles) ? user.roles[0] : null);
+    const userRole =
+      user?.role_id || (Array.isArray(user?.roles) ? user.roles[0] : null);
     // Check roles: 1=Admin, 2=Management, 3=Verified
     const isVerifiedOrStaff = user?.roles?.some((r: number) =>
       [1, 2, 3].includes(userRole)
@@ -34,12 +35,14 @@ quizzesRouter.post("/", async (req, res) => {
       });
     }
 
-    let userId: number = 4; 
+    let userId: number = 4;
     if (req.isAuthenticated() && user) {
       userId = user.user_id || user.id; // Tries both common naming conventions
     }
 
-    console.log(`Creating quiz: "${quiz_name}" for User ID: ${userId} (Role: ${userRole})`);
+    console.log(
+      `Creating quiz: "${quiz_name}" for User ID: ${userId} (Role: ${userRole})`
+    );
     await db.connection.run("BEGIN TRANSACTION");
 
     // 1. Insert into QUIZZES table using provided difficulty_id
@@ -413,7 +416,10 @@ quizzesRouter.delete("/:id", async (req, res) => {
     const quiz = await db.connection.get<{
       quiz_id: number;
       user_id: number;
-    }>(`SELECT quiz_id, user_id FROM QUIZZES WHERE quiz_id = ?`, [quizId]);
+      quiz_name: string;
+    }>(`SELECT quiz_id, user_id, quiz_name FROM QUIZZES WHERE quiz_id = ?`, [
+      quizId,
+    ]);
 
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
@@ -428,6 +434,15 @@ quizzesRouter.delete("/:id", async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
+    const logMessage = `Quiz "${quiz.quiz_name}" deleted by ${user.username}`;
+    await db.connection.run(
+      `INSERT INTO LOGS (action_performer, quiz_id, user_id, action, time_of_action) VALUES (?, ?, ?, ?, ?)`,
+      [user.username, quizId, user.id, logMessage, new Date().toISOString()]
+    );
+    await db.connection.run(
+      `UPDATE LOGS SET quiz_id = NULL WHERE quiz_id = ?`,
+      [quizId]
+    );
     // ---- delete in FK-safe order ----
 
     // delete logs
@@ -567,7 +582,7 @@ quizzesRouter.post(
       }
 
       const user = req.user as User;
-      const answers = req.body.answers; 
+      const answers = req.body.answers;
       const performerName = user?.username || "Unknown User";
 
       if (!Array.isArray(answers)) {
@@ -577,7 +592,10 @@ quizzesRouter.post(
       }
 
       // --- Get quiz and difficulty ---
-      const quiz = await db.connection.get<{ difficulty: string, quiz_name: string}>(
+      const quiz = await db.connection.get<{
+        difficulty: string;
+        quiz_name: string;
+      }>(
         `SELECT q.quiz_name, d.difficulty 
              FROM QUIZZES q
              JOIN QUIZ_DIFFICULTIES d ON q.difficulty_id = d.id

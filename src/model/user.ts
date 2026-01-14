@@ -4,6 +4,7 @@ export interface User {
     password: string,
     roles: number[],
     email: string,
+    verified: number,
     total_score: number,
     rank: number
 }

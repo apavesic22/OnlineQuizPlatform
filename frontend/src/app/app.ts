@@ -12,6 +12,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './services/auth';
 import { LoginDialog } from './dialogs/login/login';
 import { SuggestionDialogComponent } from './dialogs/suggestions/suggestions';
+import { User } from './models/user';
 
 @Component({
   selector: 'app-root',
@@ -32,7 +33,7 @@ import { SuggestionDialogComponent } from './dialogs/suggestions/suggestions';
 })
 export class App implements OnInit {
   title = 'Quizify';
-  user: any = null;
+  user: User | null = null;
   loading = true;
   isLoggedIn = false; // Added property to track login state explicitly
 
@@ -42,10 +43,11 @@ export class App implements OnInit {
     private router: Router,
     private http: HttpClient
   ) {
-    this.authService.currentUser$.subscribe((user) => {
-      this.user = user;
-      this.isLoggedIn = !!(user && user.username); // Automatically set true if user exists, false if null
-      console.log('App Auth Update:', this.isLoggedIn ? 'User Logged In' : 'No User');
+    this.authService.currentUser$.subscribe((userData) => {
+      this.user = userData;
+      this.isLoggedIn = !!userData;
+
+      console.log('User Data Sync:', this.user);
     });
   }
 
@@ -67,7 +69,6 @@ openSuggestionDialog() {
 
   dialogRef.afterClosed().subscribe((result) => {
     if (result && this.user) {
-      // YOU NEED THIS PART:
       const payload = {
         user_id: this.user.user_id, // Link to the logged-in user
         title: result.title,

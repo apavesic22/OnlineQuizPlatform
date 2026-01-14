@@ -56,7 +56,16 @@
         }
 
         <span class="spacer"></span>
-
+        @if (isLoggedIn && user && (user.role_id === 1 || user.role_id === 2)) {
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="deleteQuiz(quiz); $event.stopPropagation()"
+          title="Delete Quiz"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+        }
         <button
           mat-raised-button
           color="primary"

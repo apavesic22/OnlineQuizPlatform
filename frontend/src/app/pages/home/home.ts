@@ -9,6 +9,8 @@ import { MatIcon } from '@angular/material/icon';
 import { AuthService } from '../../services/auth';
 import { Subscription } from 'rxjs';
 import { User } from '../../models/user';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'home-page',
@@ -27,6 +29,7 @@ export class HomePage implements OnInit {
   quizzes: any[] = [];
   loading = true;
   isLoggedIn = false;
+  user: User | null = null;
   private authSub!: Subscription;
 
   // Pagination variables
@@ -37,25 +40,34 @@ export class HomePage implements OnInit {
   constructor(
     private quizzesService: QuizzesService,
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private snack: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to the currentUser$ observable from your AuthService
-    this.authService.currentUser$.subscribe((user) => {
-      const previouslyLoggedIn = this.isLoggedIn;
+    this.authSub = this.authService.currentUser$.subscribe((user) => {
+      this.user = user;
       this.isLoggedIn = !!user;
-
-      // If transition from Logged In -> Logged Out happens, reset UI state
-      if (previouslyLoggedIn && !this.isLoggedIn) {
-        this.clearLocalLikes();
-      }
     });
-
-    // Call whoami to trigger the initial auth check
-    this.authService.whoami().subscribe();
-
     this.loadQuizzes();
+  }
+
+  deleteQuiz(quiz: any): void {
+    const confirmed = confirm(`Are you sure you want to delete "${quiz.quiz_name}"? This action cannot be undone.`);
+    
+    if (confirmed) {
+      this.http.delete(`/api/quizzes/${quiz.quiz_id}`).subscribe({
+        next: () => {
+          this.snack.open('Quiz deleted successfully', 'Close', { duration: 3000 });
+          this.quizzes = this.quizzes.filter(q => q.quiz_id !== quiz.quiz_id);
+        },
+        error: (err) => {
+          this.snack.open('Error deleting quiz', 'Close', { duration: 3000 });
+          console.error(err);
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {

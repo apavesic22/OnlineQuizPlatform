@@ -23,6 +23,7 @@ export class AuthService {
         if (user && user.roles && user.roles.length > 0) {
           user.role_id = user.roles[0];
         }
+        // The backend now sends 'verified', so we ensure it's preserved
         return user;
       }),
       tap((user) => this.currentUserSubject.next(user))
@@ -35,6 +36,7 @@ export class AuthService {
         if (user && user.roles && user.roles.length > 0) {
           user.role_id = user.roles[0];
         }
+        // Ensure 'verified' is part of the object saved to the subject
         return user;
       }),
       tap((user) => this.currentUserSubject.next(user))

@@ -95,13 +95,18 @@ export class LoginDialog {
   onSubmit() {
     const { username, password } = this.form.value;
 
-    this.auth.login(username!, password!).subscribe({
-      next: () => {
-        this.snack.open('Login successful', 'Close', { duration: 3000 });
-        this.dialogRef.close(true);
+    this.auth.login(username, password).subscribe({
+      next: (user) => {
+        this.snack.open(`Welcome back, ${user.username}!`, 'Close', {
+          duration: 3000,
+        });
+        this.dialogRef.close();
       },
-      error: () => {
-        this.snack.open('Invalid credentials', 'Close', { duration: 3000 });
+      error: (err) => {
+        this.snack.open('Invalid username or password', 'Close', {
+          duration: 3000,
+        });
+        console.error('Login failed', err);
       },
     });
   }

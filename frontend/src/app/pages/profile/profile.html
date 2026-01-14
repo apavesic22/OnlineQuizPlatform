@@ -25,7 +25,7 @@
             <div class="text-group">
               <label>Verification Status</label>
               <span class="value">
-                @if (user.role_id <= 3) {
+                @if (user.verified === 1) {
                   <span class="verified-text">Verified Member</span>
                 } @else {
                   <span>Standard Member</span>

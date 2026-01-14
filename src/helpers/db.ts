@@ -322,95 +322,54 @@ export async function seedRoles(): Promise<void> {
 export async function seedUsers(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
-  // --- fixed system users ---
+  // --- fixed system users (Unchanged) ---
   const seed = [
-    {
-      role_id: 1,
-      username: "admin",
-      email: "admin@quizify.local",
-      password: process.env.SEED_ADMIN_PASSWORD || "Admin123",
-      verified: 1,
-    },
-    {
-      role_id: 2,
-      username: "manager",
-      email: "manager@quizify.local",
-      password: process.env.SEED_MANAGER_PASSWORD || "Manager123",
-      verified: 1,
-    },
-    {
-      role_id: 3,
-      username: "verified",
-      email: "verified@quizify.local",
-      password: process.env.SEED_VERIFIED_PASSWORD || "Verified123",
-      verified: 1,
-    },
-    {
-      role_id: 4,
-      username: "user",
-      email: "user@quizify.local",
-      password: process.env.SEED_USER_PASSWORD || "User123",
-      verified: 0,
-    },
+    { role_id: 1, username: "admin", email: "admin@quizify.local", password: process.env.SEED_ADMIN_PASSWORD || "Admin123", verified: 1 },
+    { role_id: 2, username: "manager", email: "manager@quizify.local", password: process.env.SEED_MANAGER_PASSWORD || "Manager123", verified: 1 },
+    { role_id: 3, username: "verified", email: "verified@quizify.local", password: process.env.SEED_VERIFIED_PASSWORD || "Verified123", verified: 1 },
+    { role_id: 4, username: "user", email: "user@quizify.local", password: process.env.SEED_USER_PASSWORD || "User123", verified: 0 },
   ];
 
-  // --- faker users count (env or default) ---
   const FAKE_USERS_COUNT = parseInt(process.env.DBFAKEUSERS || "20");
 
+  // Insert fixed users
   for (const u of seed) {
     await db.connection.run(
-      `INSERT OR IGNORE INTO USERS
-       (role_id, username, email, password_hash, verified, rank, total_score)
+      `INSERT OR IGNORE INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        u.role_id,
-        u.username,
-        u.email,
-        hashPassword(u.password),
-        u.verified,
-        0,
-        0,
-      ]
+      [u.role_id, u.username, u.email, hashPassword(u.password), u.verified, 0, 0]
     );
   }
 
+  // --- faker users logic with dynamic role_id ---
   for (let i = 0; i < FAKE_USERS_COUNT; i++) {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
+    const username = faker.internet.username({ firstName, lastName }).toLowerCase();
+    const email = faker.internet.email({ firstName, lastName }).toLowerCase();
+    const password_hash = hashPassword("User123");
 
-    const username = faker.internet
-      .username({
-        firstName,
-        lastName,
-      })
-      .toLowerCase();
+    // 1. Generate the verified status first
+    const isVerified = faker.datatype.boolean() ? 1 : 0;
 
-    const email = faker.internet
-      .email({
-        firstName,
-        lastName,
-      })
-      .toLowerCase();
-
-    const password_hash = hashPassword("User123"); // same password for all fake users
+    // 2. Set role_id based on verified status: 3 if verified, 4 if not
+    const roleId = isVerified === 1 ? 3 : 4;
 
     await db.connection.run(
-      `INSERT OR IGNORE INTO USERS
-       (role_id, username, email, password_hash, verified, rank, total_score)
+      `INSERT OR IGNORE INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        4,
+        roleId, 
         username,
         email,
         password_hash,
-        faker.datatype.boolean() ? 1 : 0,
+        isVerified,
         0,
         faker.number.int({ min: 0, max: 5000 }),
       ]
     );
   }
 }
-
 export async function seedRealQuizzes(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
