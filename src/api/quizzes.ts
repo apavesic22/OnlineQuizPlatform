@@ -936,36 +936,36 @@ quizzesRouter.post("/:id/attempts", async (req, res) => {
 
 quizzesRouter.get("/my-stats", async (req, res) => {
   try {
-    if (!db.connection)
-      return res.status(500).json({ error: "Database not initialized" });
-    if (!req.isAuthenticated())
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!db.connection) return res.status(500).json({ error: "Database not initialized" });
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
 
-    const user = req.user as User;
-    // Important: Use user_id to match your database column name
-    const userId = user.id;
+    const user = req.user as any;
+    const userId = user.id || user.user_id;
 
     const personalStats = await db.connection.all(
       `
       SELECT 
         q.quiz_name,
-        qa.score AS your_score,
+        qa.score AS your_score,  -- Renamed for frontend consistency
         qa.finished_at,
         c.category_name,
-        q.question_count as total_questions
+        -- 1. Count actual correct answers from individual responses
+        (SELECT COUNT(*) FROM ATTEMPT_ANSWERS WHERE attempt_id = qa.attempt_id AND is_correct = 1) as correct_answers,
+        -- 2. Get total questions for this specific quiz
+        (SELECT COUNT(*) FROM QUESTIONS WHERE quiz_id = q.quiz_id) as total_questions
       FROM QUIZ_ATTEMPTS qa
       JOIN QUIZZES q ON qa.quiz_id = q.quiz_id
       JOIN CATEGORIES c ON q.category_id = c.category_id
       WHERE qa.user_id = ? 
-      ORDER BY qa.finished_at DESC
+      ORDER BY qa.finished_at ASC -- Sort ASC for chronological chart flow
     `,
       [userId]
     );
 
     res.json(personalStats);
   } catch (err) {
-    console.error("Stats Error:", err);
-    res.status(500).json({ error: "Failed to fetch your statistics" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 

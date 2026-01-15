@@ -22,7 +22,7 @@ export interface PersonalStats {
   styleUrls: ['./my-stats.scss']
 })
 export class MyStatsComponent implements OnInit {
-  displayedColumns: string[] = ['name', 'category', 'score', 'date'];
+  displayedColumns: string[] = ['name', 'category', 'score', 'accuracy', 'date'];
   dataSource: PersonalStats[] = [];
   chart: any;
 
@@ -32,7 +32,6 @@ export class MyStatsComponent implements OnInit {
     this.http.get<PersonalStats[]>('/api/quizzes/my-stats').subscribe((data) => {
       this.dataSource = data;
       if (data && data.length > 0) {
-        // Timeout ensures the canvas element is in the DOM before Chart.js runs
         setTimeout(() => this.createChart(), 100);
       }
     });
@@ -44,17 +43,13 @@ export class MyStatsComponent implements OnInit {
 
     if (this.chart) this.chart.destroy();
 
-    // Sort: Oldest to Newest for the line flow
-    const sortedData = [...this.dataSource].sort(
-      (a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime()
-    );
-
-    const labels = sortedData.map(d => new Date(d.finished_at).toLocaleDateString());
+    const labels = this.dataSource.map(d => new Date(d.finished_at).toLocaleDateString());
     
-    const scores = sortedData.map(d => {
+    
+    const accuracyData = this.dataSource.map(d => {
       const total = d.total_questions > 0 ? d.total_questions : 1;
       const percentage = (d.correct_answers / total) * 100;
-      return Math.round(percentage);
+      return Math.round(percentage); 
     });
 
     this.chart = new Chart(ctx, {
@@ -62,12 +57,12 @@ export class MyStatsComponent implements OnInit {
       data: {
         labels: labels,
         datasets: [{
-          label: 'Accuracy (%)',
-          data: scores,
+          label: 'Success Rate (%)',
+          data: accuracyData,
           borderColor: '#3f51b5',
           backgroundColor: 'rgba(63, 81, 181, 0.1)',
           fill: true,
-          tension: 0.4,
+          tension: 0.3,
           pointRadius: 6,
           pointBackgroundColor: '#3f51b5'
         }]
@@ -82,10 +77,14 @@ export class MyStatsComponent implements OnInit {
             ticks: {
               stepSize: 20,
               callback: (value: string | number) => {
+
           const numValue = typeof value === 'number' ? value : parseFloat(value);
+
           return numValue <= 100 ? numValue + '%' : '';
+
         }
-            }
+            },
+            title: { display: true, text: 'Accuracy (%)' }
           }
         }
       }

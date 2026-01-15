@@ -1,53 +1,43 @@
-<div class="stats-container">
-  <mat-card class="chart-card">
-    <mat-card-header>
-      <mat-card-title>Your Progress Performance</mat-card-title>
-    </mat-card-header>
+<div class="stats-container" style="padding: 20px;">
+  <mat-card style="margin-bottom: 20px;">
+    <mat-card-header><mat-card-title>Performance Over Time</mat-card-title></mat-card-header>
     <mat-card-content>
-      <div class="chart-wrapper">
-        <canvas id="performanceChart"></canvas>
-      </div>
+      <div style="height: 300px;"><canvas id="performanceChart"></canvas></div>
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="table-card">
-    <mat-card-header>
-      <mat-card-title>Attempt History</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <table mat-table [dataSource]="dataSource" class="mat-elevation-z0">
-        
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef> Quiz </th>
-          <td mat-cell *matCellDef="let stat"> {{stat.quiz_name}} </td>
-        </ng-container>
+  <mat-card>
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z0" style="width: 100%;">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Quiz </th>
+        <td mat-cell *matCellDef="let stat"> {{stat.quiz_name}} </td>
+      </ng-container>
 
-        <ng-container matColumnDef="category">
-          <th mat-header-cell *matHeaderCellDef> Category </th>
-          <td mat-cell *matCellDef="let stat"> 
-            <span class="category-badge">{{stat.category_name}}</span> 
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef> Category </th>
+        <td mat-cell *matCellDef="let stat"> {{stat.category_name}} </td>
+      </ng-container>
 
-        <ng-container matColumnDef="score">
-          <th mat-header-cell *matHeaderCellDef> Score </th>
-          <td mat-cell *matCellDef="let stat"> 
-            <strong>{{stat.your_score}}</strong> pts 
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="score">
+        <th mat-header-cell *matHeaderCellDef> Points </th>
+        <td mat-cell *matCellDef="let stat"> <strong>{{stat.your_score}}</strong> pts </td>
+      </ng-container>
 
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef> Date </th>
-          <td mat-cell *matCellDef="let stat"> {{stat.finished_at | date:'short'}} </td>
-        </ng-container>
+      <ng-container matColumnDef="accuracy">
+        <th mat-header-cell *matHeaderCellDef> Accuracy </th>
+        <td mat-cell *matCellDef="let stat"> 
+          {{stat.correct_answers}}/{{stat.total_questions}} 
+          <small>({{ (stat.correct_answers/stat.total_questions * 100) | number:'1.0-0' }}%)</small>
+        </td>
+      </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef> Date </th>
+        <td mat-cell *matCellDef="let stat"> {{stat.finished_at | date:'short'}} </td>
+      </ng-container>
 
-      <div *ngIf="dataSource.length === 0" class="no-data">
-        You haven't played any quizzes yet. Go play one!
-      </div>
-    </mat-card-content>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
   </mat-card>
 </div>
