@@ -46,7 +46,9 @@ export class App implements OnInit {
     this.authService.currentUser$.subscribe((userData) => {
       this.user = userData;
       this.isLoggedIn = !!userData;
-
+      this.router.events.subscribe(event => {
+    console.log('Navigation Event:', event);
+  });
       console.log('User Data Sync:', this.user);
     });
   }

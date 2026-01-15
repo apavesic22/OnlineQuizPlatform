@@ -1016,3 +1016,19 @@ quizzesRouter.post("/:id/like", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error during Like toggle" });
   }
 });
+quizzesRouter.get("/difficulty-stats", async (req, res) => {
+  try {
+    if (!db.connection) return res.status(500).json({ error: "Database not initialized" });
+
+    const stats = await db.connection.all(
+      `SELECT d.difficulty as label, COUNT(q.quiz_id) as count
+       FROM QUIZ_DIFFICULTIES d
+       LEFT JOIN QUIZZES q ON d.id = q.difficulty_id
+       GROUP BY d.difficulty`
+    );
+
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch difficulty stats" });
+  }
+});

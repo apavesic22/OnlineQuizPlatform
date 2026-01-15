@@ -1,0 +1,20 @@
+<div class="dist-container">
+  <mat-card class="dist-card">
+    <mat-card-header>
+      <mat-card-title>Quiz Difficulty Distribution</mat-card-title>
+      <mat-card-subtitle>A breakdown of your quiz attempts by difficulty level</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="chart-container">
+        <canvas id="distPieChart"></canvas>
+      </div>
+
+      <div *ngIf="noData" class="no-data-message">
+        <mat-icon>analytics</mat-icon>
+        <p>No quiz attempts found. Start playing to see your distribution!</p>
+        <button mat-raised-button color="primary" routerLink="/home">Play a Quiz</button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

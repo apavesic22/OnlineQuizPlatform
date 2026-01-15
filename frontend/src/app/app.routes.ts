@@ -55,6 +55,12 @@ export const routes: Route[] = [
     title: 'Manage Users',
   },
   {
+    path: 'difficulty-dist',
+    loadComponent: () =>
+      import('./pages/difficulty-dist/difficulty-dist').then((m) => m.DifficultyDistComponent),
+    title: 'Difficulty Distribution',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
