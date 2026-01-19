@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
     <h2 mat-dialog-title>{{ data.user ? 'Edit User' : 'Create User' }}</h2>
     <form [formGroup]="userForm" (ngSubmit)="onSave()">
       <mat-dialog-content class="dialog-content">
+        
         <mat-form-field appearance="outline">
           <mat-label>Username</mat-label>
           <input matInput formControlName="username">
@@ -37,11 +38,11 @@ import { CommonModule } from '@angular/common';
           <mat-select formControlName="role_id">
             <mat-option [value]="1">Administrator</mat-option>
             <mat-option [value]="2">Manager</mat-option>
-            <mat-option [value]="4">Regular User</mat-option>
+            <mat-option [value]="3">Verified User</mat-option>
+            <mat-option [value]="4">Standard User</mat-option>
           </mat-select>
         </mat-form-field>
 
-        
       </mat-dialog-content>
 
       <mat-dialog-actions align="end">

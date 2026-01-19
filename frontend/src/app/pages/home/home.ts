@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
 import { User } from '../../models/user';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-
+import { AdminQuizEditDialog } from '../../dialogs/edit-quiz-dialog/edit-quiz-dialog';
 @Component({
   selector: 'home-page',
   standalone: true,
@@ -42,8 +42,24 @@ export class HomePage implements OnInit {
     private http: HttpClient,
     private authService: AuthService,
     private snack: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
+
+  openEditDialog(quizId: number): void {
+    const dialogRef = this.dialog.open(AdminQuizEditDialog, {
+      width: '800px', // Set a wide width for the quiz editor
+      maxHeight: '90vh',
+      data: { quiz_id: quizId },
+      panelClass: 'glass-dialog', // If you have custom glassmorphism styles
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      // If the dialog closed and returned 'true' (saved successfully)
+      if (result) {
+        this.loadQuizzes(this.currentPage); // Refresh the list to show new title/etc
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.authSub = this.authService.currentUser$.subscribe((user) => {
@@ -54,18 +70,22 @@ export class HomePage implements OnInit {
   }
 
   deleteQuiz(quiz: any): void {
-    const confirmed = confirm(`Are you sure you want to delete "${quiz.quiz_name}"? This action cannot be undone.`);
-    
+    const confirmed = confirm(
+      `Are you sure you want to delete "${quiz.quiz_name}"? This action cannot be undone.`,
+    );
+
     if (confirmed) {
       this.http.delete(`/api/quizzes/${quiz.quiz_id}`).subscribe({
         next: () => {
-          this.snack.open('Quiz deleted successfully', 'Close', { duration: 3000 });
-          this.quizzes = this.quizzes.filter(q => q.quiz_id !== quiz.quiz_id);
+          this.snack.open('Quiz deleted successfully', 'Close', {
+            duration: 3000,
+          });
+          this.quizzes = this.quizzes.filter((q) => q.quiz_id !== quiz.quiz_id);
         },
         error: (err) => {
           this.snack.open('Error deleting quiz', 'Close', { duration: 3000 });
           console.error(err);
-        }
+        },
       });
     }
   }

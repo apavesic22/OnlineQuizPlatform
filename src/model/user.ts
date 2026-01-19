@@ -6,5 +6,6 @@ export interface User {
     email: string,
     verified: number,
     total_score: number,
-    rank: number
+    rank: number,
+    role_id: number
 }

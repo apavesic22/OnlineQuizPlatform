@@ -41,31 +41,39 @@
             (click)="toggleLike(quiz); $event.stopPropagation()"
             [color]="quiz.user_has_liked ? 'warn' : ''"
           >
-            <mat-icon
-              >{{ quiz.user_has_liked ? 'favorite' : 'favorite_border'
-              }}</mat-icon
-            >
+            <mat-icon>{{ quiz.user_has_liked ? 'favorite' : 'favorite_border' }}</mat-icon>
           </button>
-          <span class="like-count">{{ quiz.likes || 0 }}</span>
-        </div>
-        } @else {
-        <div class="like-section guest-view">
-          <mat-icon class="grey-heart">favorite_border</mat-icon>
           <span class="like-count">{{ quiz.likes || 0 }}</span>
         </div>
         }
 
         <span class="spacer"></span>
+
         @if (isLoggedIn && user && (user.role_id === 1 || user.role_id === 2)) {
-        <button
-          mat-icon-button
-          color="warn"
-          (click)="deleteQuiz(quiz); $event.stopPropagation()"
-          title="Delete Quiz"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
+        <div class="admin-actions">
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteQuiz(quiz); $event.stopPropagation()"
+            title="Delete Quiz"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+          
+          @if (user.role_id === 1) {
+          <button
+            mat-mini-fab
+            color="accent"
+            class="edit-fab"
+            (click)="openEditDialog(quiz.quiz_id); $event.stopPropagation()"
+            title="Edit Quiz"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          }
+        </div>
         }
+
         <button
           mat-raised-button
           color="primary"

@@ -275,121 +275,100 @@ quizzesRouter.get("/category/:category", async (req, res) => {
 
 quizzesRouter.put("/:id", async (req, res) => {
   try {
+    if (!db.connection) return res.status(500).json({ error: "DB Error" });
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+
+    const quizId = Number(req.params.id);
+    const user = req.user as any; 
+
+    const isAdmin = 
+      user.role_id === 1 || 
+      user.role === 1 || 
+      (Array.isArray(user.roles) && user.roles.includes(1));
+
+    const currentUserId = user.user_id || user.id;
+
+    const quiz = await db.connection.get(`SELECT user_id FROM QUIZZES WHERE quiz_id = ?`, [quizId]);
+    if (!quiz) return res.status(404).json({ error: "Quiz not found" });
+
+    const hasPermission = isAdmin || (quiz.user_id === currentUserId);
+
+    if (!hasPermission) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const { quiz_name, category_id, difficulty_id, questions } = req.body;
+
+    await db.connection.run("BEGIN TRANSACTION");
+
+    try {
+      await db.connection.run(
+        `UPDATE QUIZZES SET 
+          quiz_name = COALESCE(?, quiz_name), 
+          category_id = COALESCE(?, category_id), 
+          difficulty_id = COALESCE(?, difficulty_id) 
+         WHERE quiz_id = ?`,
+        [quiz_name, category_id, difficulty_id, quizId]
+      );
+
+      if (questions && Array.isArray(questions)) {
+        const existingQs = await db.connection.all(`SELECT question_id FROM QUESTIONS WHERE quiz_id = ?`, [quizId]);
+        const incomingQIds = questions.map(q => q.question_id).filter(id => id != null);
+        
+        for (const eq of existingQs) {
+          if (!incomingQIds.includes(eq.question_id)) {
+            await db.connection.run(`DELETE FROM ANSWER_OPTIONS WHERE question_id = ?`, [eq.question_id]);
+            await db.connection.run(`DELETE FROM QUESTIONS WHERE question_id = ?`, [eq.question_id]);
+          }
+        }
+
+        for (const q of questions) {
+          await db.connection.run(
+            `UPDATE QUESTIONS SET question_text = ? WHERE question_id = ? AND quiz_id = ?`,
+            [q.question_text, q.question_id, quizId]
+          );
+
+          if (q.answers && Array.isArray(q.answers)) {
+            for (const a of q.answers) {
+              await db.connection.run(
+                `UPDATE ANSWER_OPTIONS SET answer_text = ?, is_correct = ? WHERE answer_id = ? AND question_id = ?`,
+                [a.answer_text, a.is_correct ? 1 : 0, a.answer_id, q.question_id]
+              );
+            }
+          }
+        }
+      }
+
+      await db.connection.run("COMMIT");
+      res.status(200).json({ message: "Quiz updated successfully" });
+
+    } catch (err) {
+      await db.connection.run("ROLLBACK");
+      throw err; 
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update quiz content" });
+  }
+});
+
+quizzesRouter.get("/:id/QuizEdit", requireRole([1]), async (req, res) => {
+  try {
     if (!db.connection) {
       return res.status(500).json({ error: "Database not initialized" });
     }
 
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const quizId = Number(req.params.id);
-    if (Number.isNaN(quizId)) {
-      return res.status(400).json({ error: "Invalid quiz id" });
-    }
-
-    const user = req.user as User;
-
-    // ---- fetch quiz ----
-    const quiz = await db.connection.get<{
-      quiz_id: number;
-      user_id: number;
-    }>(`SELECT quiz_id, user_id FROM QUIZZES WHERE quiz_id = ?`, [quizId]);
-
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-
-    const isAdminOrManagement =
-      user.roles?.includes(1) || user.roles?.includes(2);
-
-    const isOwner = quiz.user_id === user.id;
-
-    if (!isOwner && !isAdminOrManagement) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const { quiz_name, category_id, difficulty_id, duration, question_count } =
-      req.body;
-
-    // ---- no fields ----
-    if (
-      quiz_name === undefined &&
-      category_id === undefined &&
-      difficulty_id === undefined &&
-      duration === undefined &&
-      question_count === undefined
-    ) {
-      return res.status(204).send();
-    }
-
-    // ---- role-based validation ----
-    const isVerified = user.roles?.includes(3);
-
-    if (
-      !isVerified &&
-      (duration !== undefined || question_count !== undefined)
-    ) {
-      return res.status(403).json({
-        error: "Only verified users can change duration or question count",
-      });
-    }
-
-    // ---- foreign key validation ----
-    if (category_id !== undefined) {
-      const c = await db.connection.get(
-        `SELECT category_id FROM CATEGORIES WHERE category_id = ?`,
-        [category_id]
-      );
-      if (!c) return res.status(400).json({ error: "Invalid category_id" });
-    }
-
-    if (difficulty_id !== undefined) {
-      const d = await db.connection.get(
-        `SELECT id FROM QUIZ_DIFFICULTIES WHERE id = ?`,
-        [difficulty_id]
-      );
-      if (!d) return res.status(400).json({ error: "Invalid difficulty_id" });
-    }
-
-    // ---- build update dynamically ----
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (quiz_name !== undefined) {
-      updates.push("quiz_name = ?");
-      values.push(quiz_name);
-    }
-
-    if (category_id !== undefined) {
-      updates.push("category_id = ?");
-      values.push(category_id);
-    }
-
-    if (difficulty_id !== undefined) {
-      updates.push("difficulty_id = ?");
-      values.push(difficulty_id);
-    }
-
-    if (duration !== undefined) {
-      updates.push("duration = ?");
-      values.push(duration);
-    }
-
-    if (question_count !== undefined) {
-      updates.push("question_count = ?");
-      values.push(question_count);
-    }
-
-    values.push(quizId);
-
-    await db.connection.run(
-      `UPDATE QUIZZES SET ${updates.join(", ")} WHERE quiz_id = ?`,
-      values
-    );
-
-    res.status(200).json({ message: "Quiz updated successfully" });
-  } catch (err) {
+    const { id } = req.params;
+    const quiz = await db.connection.get("SELECT * FROM QUIZZES WHERE quiz_id = ?", [id]);
+    const questions = await db.connection.all("SELECT * FROM QUESTIONS WHERE quiz_id = ?", [id]);
+  
+  for (let q of questions) {
+    q.answers = await db.connection.all("SELECT * FROM ANSWER_OPTIONS WHERE question_id = ?", [q.question_id]);
+  }
+  
+  res.json({ ...quiz, questions });
+  }
+  catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update quiz" });
   }
