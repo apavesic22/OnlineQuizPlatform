@@ -178,6 +178,7 @@ async function findUserById(id: number): Promise<User | undefined> {
     verified: row.verified,
     total_score: 0,
     rank: 0,
+    role_id: row.role_id
   };
 }
 
@@ -216,6 +217,7 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     total_score: 0,
     verified: row.verified,
     rank: 0,
+    role_id: row.role_id
   };
 }
 
