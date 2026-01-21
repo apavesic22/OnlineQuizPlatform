@@ -4,10 +4,6 @@ import { User } from "../model/user";
 
 export const questionsRouter = Router();
 
-questionsRouter.post("/", async (req, res) => {
-  res.json({ message: "Questions endpoint is under construction." });
-});
-
 questionsRouter.put("/:questionId", async (req, res) => {
   try {
     if (!db.connection) {
