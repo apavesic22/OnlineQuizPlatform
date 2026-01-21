@@ -1,26 +1,71 @@
 <div class="authors-container">
-  <mat-card class="profile-card">
-    <div class="image-wrapper">
-      <img [src]="author.imageUrl" alt="Author Picture" class="profile-img" />
-    </div>
-
-    <mat-card-content class="profile-info">
-      <h2 class="name">{{ author.name }} {{ author.surname }}</h2>
-      <div class="contact-item">
-        <mat-icon>email</mat-icon>
-        <span>{{ author.email }}</span>
+  <div class="cards-wrapper">
+    
+    <mat-card class="profile-card">
+      <div class="image-wrapper">
+        <img [src]="andrej.imageUrl" alt="Author Picture" class="profile-img" />
       </div>
-    </mat-card-content>
+      <mat-card-content class="profile-info">
+        <h2 class="name">{{ andrej.name }} {{ andrej.surname }}</h2>
+        <div class="info-grid">
+          <div class="info-card">
+            <mat-icon>school</mat-icon>
+            <div class="text-group"><span>{{ andrej.profession }}</span></div>
+          </div>
+          <div class="info-card">
+            <mat-icon>location_on</mat-icon>
+            <div class="text-group"><span>{{ andrej.location }}</span></div>
+          </div>
+          <div class="info-card email-full">
+            <mat-icon>email</mat-icon>
+            <div class="text-group"><span>{{ andrej.email }}</span></div>
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions class="center-actions">
+        <a mat-flat-button class="contact-btn" [attr.href]="'mailto:' + andrej.email">
+          <mat-icon>email</mat-icon> Contact Me
+        </a>
+      </mat-card-actions>
+    </mat-card>
 
-    <mat-card-actions class="center-actions">
-      <a
-        mat-flat-button
-        class="contact-btn"
-        [attr.href]="'mailto:' + author.email"
-      >
-        <mat-icon>email</mat-icon>
-        Contact Me
-      </a>
-    </mat-card-actions>
-  </mat-card>
+    <mat-card class="profile-card">
+      <div class="image-wrapper">
+        <img [src]="roman.imageUrl" alt="Colleague Picture" class="profile-img" />
+      </div>
+      <mat-card-content class="profile-info">
+        <h2 class="name">{{ roman.name }} {{ roman.surname }}</h2>
+        <div class="info-grid">
+          <div class="info-card">
+            <mat-icon>school</mat-icon>
+            <div class="text-group"><span>{{ roman.profession }}</span></div>
+          </div>
+          <div class="info-card">
+            <mat-icon>location_on</mat-icon>
+            <div class="text-group"><span>{{ roman.location }}</span></div>
+          </div>
+          <div class="info-card email-full">
+            <mat-icon>email</mat-icon>
+            <div class="text-group"><span>{{ roman.email }}</span></div>
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions class="center-actions">
+        <a mat-flat-button class="contact-btn" [attr.href]="'mailto:' + roman.email">
+          <mat-icon>email</mat-icon> Contact Me
+        </a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="diagram-section">
+    <h3>Project Architecture</h3>
+    <div class="thumbnail-container" (click)="openDiagram()">
+      <img src="../../../../../uploads/ERdiagram.svg" class="er-thumbnail" />
+      <div class="hover-overlay">
+        <mat-icon>zoom_in</mat-icon>
+        <span>Click to expand ER Diagram</span>
+      </div>
+    </div>
+  </div>
 </div>
