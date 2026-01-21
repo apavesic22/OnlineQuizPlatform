@@ -1,0 +1,34 @@
+<div class="docs-container">
+  <mat-card class="docs-card">
+    <div class="header-section">
+      <h1><mat-icon>api</mat-icon> Backend API Reference</h1>
+      <p>Base URL: <code>http://spider.foi.hr:12159</code></p>
+    </div>
+
+    <div class="table-container">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+            <th>Payload / Auth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ep of endpoints">
+            <td><span class="method-badge" [ngClass]="ep.method.toLowerCase()">{{ ep.method }}</span></td>
+            <td><code>{{ ep.path }}</code></td>
+            <td class="desc">{{ ep.desc }}</td>
+            <td>
+              <div class="extra-info">
+                <small>Auth: {{ ep.auth }}</small>
+                <code class="payload-preview" *ngIf="ep.payload !== 'None'">{{ ep.payload }}</code>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </mat-card>
+</div>

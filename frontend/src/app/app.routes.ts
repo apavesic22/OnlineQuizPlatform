@@ -67,6 +67,12 @@ export const routes: Route[] = [
     title: 'Authors',
   },
   {
+    path: 'api-docs',
+    loadComponent: () =>
+      import('./pages/api-docs/api-docs').then((m) => m.ApiDocsComponent),
+    title: 'API documentation',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
