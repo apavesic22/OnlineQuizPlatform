@@ -1,0 +1,26 @@
+<div class="authors-container">
+  <mat-card class="profile-card">
+    <div class="image-wrapper">
+      <img [src]="author.imageUrl" alt="Author Picture" class="profile-img" />
+    </div>
+
+    <mat-card-content class="profile-info">
+      <h2 class="name">{{ author.name }} {{ author.surname }}</h2>
+      <div class="contact-item">
+        <mat-icon>email</mat-icon>
+        <span>{{ author.email }}</span>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions class="center-actions">
+      <a
+        mat-flat-button
+        class="contact-btn"
+        [attr.href]="'mailto:' + author.email"
+      >
+        <mat-icon>email</mat-icon>
+        Contact Me
+      </a>
+    </mat-card-actions>
+  </mat-card>
+</div>

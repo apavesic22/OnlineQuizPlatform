@@ -61,6 +61,12 @@ export const routes: Route[] = [
     title: 'Difficulty Distribution',
   },
   {
+    path: 'authors',
+    loadComponent: () =>
+    import('./pages/authors/authors').then((m) => m.AuthorsComponent),
+    title: 'Authors',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
