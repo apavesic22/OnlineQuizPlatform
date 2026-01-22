@@ -16,7 +16,7 @@ export class AuthorsComponent {
   andrej = {
     name: 'Andrej',
     surname: 'Pavešić',
-    profession: 'Student at FOI',
+    profession: 'Student at FOI (0016158653)',
     location: 'Varaždin, Croatia',
     email: 'apavesic22@student.foi.hr',
     imageUrl: '../../../../../uploads/Profilna.jpg'
