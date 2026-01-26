@@ -7,13 +7,6 @@ npm install -g @angular/cli@20
 ```
 NOTE: from some reasons, it is not recommended to install Angular tools (as `ng`) locally (i.e. among the project files). Global installation (`-g` option) may require administrative rights to the system. On Mac and Linuxes, you should precede the command with `sudo`.
 
-#### Consume this project
-
-##### Clone sources to a local folder
-```bash
-git clone https://gitlab.com/mariusz.jarocki/wad-cont.git
-```
-
 ##### Install dependecies for both frontend and backend
 ```bash
 npm install && npm --prefix frontend install
@@ -36,14 +29,3 @@ npm run dev
 * simply remove `./db/*.sqlite3` files (all or selected)
 * start the backend
 
-##### Enjoy the working Webapp in your browser!
-http://localhost:4200
-
-##### REST API documentation
-[Click here](./API.md)
-
-##### ERD diagram
-![ERD](./data-erd.png)
-
-##### Visual component dependencies
-![Visual components](./visual-component-dependencies.drawio.png)
