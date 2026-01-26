@@ -1,0 +1,73 @@
+::ng-deep {
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    background: rgba(15, 23, 42, 0.98) !important; 
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 28px !important;
+    padding: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+    min-width: 500px;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 20px 0 !important;
+    overflow-x: hidden;
+
+    .mat-mdc-form-field {
+      width: 100% !important; 
+      display: block !important;
+      margin-bottom: 20px !important;
+    }
+
+    .mdc-floating-label {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 1.1rem !important;
+    }
+
+    .mat-mdc-form-field.mat-focused .mdc-floating-label {
+      color: #06b6d4 !important;
+      font-weight: 800 !important;
+      text-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
+    }
+
+    .mat-mdc-text-field-wrapper {
+      min-height: 65px !important;
+      background-color: rgba(255, 255, 255, 0.07) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 14px !important;
+      
+      &:hover {
+        border-color: #06b6d4 !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+
+    .mat-mdc-input-element {
+      color: #ffffff !important;
+    }
+  }
+
+  .mat-mdc-dialog-title {
+    font-size: 2.2rem !important;
+    font-weight: 800 !important;
+    background: linear-gradient(45deg, #06b6d4, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+  }
+
+  .mat-mdc-dialog-actions {
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 25px !important;
+
+    .confirm-btn {
+      background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+      height: 50px;
+      padding: 0 35px !important;
+      border-radius: 14px !important;
+      font-weight: 800;
+    }
+  }
+}

@@ -1,0 +1,131 @@
+.profile-container {
+  display: flex;
+  justify-content: center;
+  padding: 80px 20px;
+  min-height: 100vh;
+
+  .profile-card {
+    max-width: 500px;
+    width: 100%;
+    background: rgba(30, 41, 59, 0.45) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 32px !important;
+    padding: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden;
+
+    mat-card-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 30px;
+
+      .user-avatar {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+
+        mat-icon {
+          font-size: 60px;
+          width: 60px;
+          height: 60px;
+          color: white;
+        }
+      }
+
+      .mat-card-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+        margin-top: 10px;
+        letter-spacing: -0.5px;
+      }
+
+      .mat-card-subtitle {
+        color: #06b6d4 !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+    }
+
+    mat-card-content {
+      padding: 0 10px !important;
+
+      mat-divider {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .info-list {
+        margin-top: 20px;
+
+        .info-row {
+          display: flex;
+          align-items: center;
+          padding: 20px;
+          gap: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 20px;
+          margin-bottom: 12px;
+          transition: background 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.06);
+          }
+
+          mat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+            color: #8b5cf6 !important;
+            filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.4));
+          }
+
+          .text-group {
+            display: flex;
+            flex-direction: column;
+            
+            label {
+              font-size: 11px;
+              color: #94a3b8;
+              text-transform: uppercase;
+              font-weight: 700;
+              letter-spacing: 1.5px;
+              margin-bottom: 4px;
+            }
+
+            .value {
+              font-size: 1.1rem;
+              font-weight: 600;
+              color: #f1f5f9;
+            }
+
+            .verified-text {
+              color: #10b981;
+              font-weight: 800;
+              display: flex;
+              align-items: center;
+              text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+p {
+  color: #94a3b8;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 100px;
+}

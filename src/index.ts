@@ -17,19 +17,26 @@ config({ quiet: true });
 const app = express();
 
 app.use(morgan(process.env.MORGANTYPE || "tiny"));
+app.use(morgan(process.env.MORGANTYPE || "tiny"));
+
+const frontendPath = path.join(process.cwd(), 'frontend', 'dist', 'frontend', 'browser');
+console.log("Serving frontend from: ", frontendPath);
 
 const frontendPath = path.join(process.cwd(), 'frontend', 'dist', 'frontend', 'browser');
 console.log("Serving frontend from: ", frontendPath);
 
 app.use(express.static(frontendPath));
 app.use("/uploads", express.static(process.env.UPLOADSDIR || "./uploads"));
+app.use("/uploads", express.static(process.env.UPLOADSDIR || "./uploads"));
 
+const apiUrl = process.env.APIURL || "/api";
 const apiUrl = process.env.APIURL || "/api";
 
 app.use(express.json());
 
 async function main() {
   await initAuth(app);
+  console.log("Initialize authorization framework");
   console.log("Initialize authorization framework");
 
   await openDb();
@@ -46,6 +53,7 @@ async function main() {
 
   app.use(errorHandler);
 
+  app.get("../")
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

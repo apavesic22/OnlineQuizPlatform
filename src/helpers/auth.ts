@@ -13,6 +13,7 @@ import SQLiteStoreFactory from "connect-sqlite3";
 import { db } from "./db";
 import { User } from "../model/user";
 import { HttpError } from "./errors";
+import { recomputeUserRanks } from "./db";
 
 export const authRouter = Router();
 
@@ -20,6 +21,43 @@ interface AuthRequest extends Request {
   user?: User;
 }
 
+authRouter.post("/register", async (req: Request, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (!db.connection) {
+      return res.status(500).json({ error: "Database not initialized" });
+    }
+
+    const existing = await db.connection.get(
+      "SELECT user_id FROM USERS WHERE username = ? OR email = ?",
+      [username, email]
+    );
+
+    if (existing) {
+      return res.status(409).json({ error: "Username or Email already taken" });
+    }
+
+    const passwordHash = hashPassword(password);
+
+    await db.connection.run(
+      `INSERT INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
+       VALUES (?, ?, ?, ?, ?, 0, 0)`,
+      [4, username, email, passwordHash, 0]
+    );
+
+    await recomputeUserRanks();
+
+    res.status(201).json({ message: "Registration successful" });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
 export function requireRole(roles: number[]): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
     const authReq = req as AuthRequest;
@@ -44,7 +82,6 @@ export function verifyPassword(password: string, stored: string): boolean {
   return hash === hashToCompare;
 }
 
-// Initialize authentication
 export async function initAuth(
   app: Express,
   reset: boolean = false
@@ -76,29 +113,21 @@ export async function initAuth(
     )
   );
 
-  // Middleware setup with persistent sessions
   const SQLiteStore = SQLiteStoreFactory(session);
   app.use(
     session({
       secret: process.env.SECRETKEY || "mysecretkey",
       resave: false,
       saveUninitialized: false,
-      // store sessions in sqlite database
       store: new SQLiteStore({
         db: process.env.SESSIONSDBFILE || "./db/sessions.sqlite3",
       }) as session.Store,
-      cookie: { maxAge: 86400000 }, // default 1 day
+      cookie: { maxAge: 86400000 }, 
     })
   );
 
   app.use(passport.initialize());
   app.use(passport.session());
-  /*
-  if(reset) {
-    users.length = 0;
-  }
-  if(users.length > 0) return; // already initialized
-  */
 }
 
 async function findUserById(id: number): Promise<User | undefined> {
@@ -109,13 +138,17 @@ async function findUserById(id: number): Promise<User | undefined> {
     username: string;
     password_hash: string;
     role_id: number;
+    verified: number;
+    email: string;
   }>(
     `
     SELECT
       u.user_id,
       u.username,
       u.password_hash,
-      u.role_id
+      u.role_id,
+      u.verified,
+      u.email
     FROM USERS u
     WHERE u.user_id = ?
   `,
@@ -129,6 +162,11 @@ async function findUserById(id: number): Promise<User | undefined> {
     username: row.username,
     password: row.password_hash,
     roles: [row.role_id],
+    email: row.email,
+    verified: row.verified,
+    total_score: 0,
+    rank: 0,
+    role_id: row.role_id
   };
 }
 
@@ -140,13 +178,16 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     username: string;
     password_hash: string;
     role_id: number;
+    verified: number;
+    email: string;
   }>(
     `
     SELECT
       u.user_id,
       u.username,
       u.password_hash,
-      u.role_id
+      u.role_id,
+      u.email
     FROM USERS u
     WHERE u.username = ?
   `,
@@ -159,11 +200,15 @@ async function findUserByUsername(username: string): Promise<User | undefined> {
     id: row.user_id,
     username: row.username,
     password: row.password_hash,
-    roles: [row.role_id], // single role → array
+    roles: [row.role_id], 
+    email: row.email,
+    total_score: 0,
+    verified: row.verified,
+    rank: 0,
+    role_id: row.role_id
   };
 }
 
-// Serialize user to store in session (User -> user.id)
 passport.serializeUser((user: Express.User, done) => {
   done(null, (user as User).id);
 });
@@ -176,26 +221,7 @@ passport.deserializeUser(async (id: number, done) => {
     done(err);
   }
 });
-/**
- * @api {post} /api/auth Login user
- * @apiGroup Authentication
- * @apiName Login
- *
- * @apiDescription
- * Authenticates a user using JSON body credentials.
- * The endpoint expects credentials formatted according to the JSON strategy
- * of Passport (`{ "username": "...", "password": "..." }`).
- *
- * @apiBody {String} username User's login name
- * @apiBody {String} password User's password
- *
- * @apiSuccess {String} message Successful login message
- * @apiSuccess {String} username Authenticated user's username
- * @apiSuccess {Number[]} roles List of numeric role identifiers assigned to the user
- *
- * @apiError (401) Unauthorized Invalid credentials
- * @apiUse HttpError
- */
+
 authRouter.post(
   "",
   passport.authenticate("json"),
@@ -205,22 +231,12 @@ authRouter.post(
       message: "Logged in successfully",
       username: authReq.user?.username,
       roles: authReq.user?.roles,
+      email: authReq.user?.email,
+      verified: authReq.user?.verified,
     });
   }
 );
 
-/**
- * @api {delete} /api/auth Logout user
- * @apiGroup Authentication
- * @apiName Logout
- *
- * @apiDescription
- * Logs out the currently authenticated user by terminating their session.
- *
- * @apiSuccess {String} message Logout confirmation message
- *
- * @apiUse HttpError
- */
 authRouter.delete("", (req: Request, res: Response, next: NextFunction) => {
   const authReq = req as AuthRequest;
   authReq.logout((err) => {
@@ -229,25 +245,11 @@ authRouter.delete("", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-/**
- * @api {get} /api/auth Who am I
- * @apiGroup Authentication
- * @apiName WhoAmI
- *
- * @apiDescription
- * Returns information about the currently authenticated user.
- * If no user is logged in, `username` and `roles` will be `null`.
- *
- * @apiSuccess {String|null} username Authenticated user's username or null if not logged in
- * @apiSuccess {Number[]|null} roles List of user's role IDs or null if not logged in
- *
- * @apiUse HttpError
- */
 authRouter.get("", (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
     const user = req.user as User;
-    res.json({ username: user.username, roles: user.roles });
+    res.json({ username: user.username, roles: user.roles, email: user.email, verified: user.verified });
   } else {
-    res.json({ username: null, roles: null });
+    res.json({ username: null, roles: null, email: null, verified: 0 });
   }
 });

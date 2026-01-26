@@ -1,0 +1,66 @@
+<div class="play-container">
+  @if (loading) {
+  <p>Loading quiz...</p>
+  } @else {
+    @if (!quizFinished) {
+      <mat-progress-bar
+        mode="determinate"
+        [value]="progressValue"
+      ></mat-progress-bar>
+
+      <div class="timer-text">{{ timeLeft }} seconds left</div>
+
+      <h2>Question {{ currentIndex + 1 }} / {{ questions.length }}</h2>
+
+      <div class="question-text">{{ currentQuestion.question_text }}</div>
+
+      <div class="answers">
+        @if (currentQuestion.type === 'True/False') { @for (answer of
+        currentQuestion.answers; track answer.answer_id) {
+        <button
+          mat-raised-button
+          class="answer-btn tf-btn"
+          [disabled]="answered"
+          [ngClass]="{
+              'correct': answered && isCorrect(answer),
+              'wrong': answered && isSelected(answer) && !isCorrect(answer)
+            }"
+          (click)="selectAnswer(answer)"
+        >
+          {{ answer.answer_text }}
+        </button>
+        } }
+
+        @else { @for (answer of currentQuestion.answers; track answer.answer_id) {
+        <button
+          mat-raised-button
+          class="answer-btn"
+          [disabled]="answered"
+          [ngClass]="{
+              'correct': answered && isCorrect(answer),
+              'wrong': answered && isSelected(answer) && !isCorrect(answer)
+            }"
+          (click)="selectAnswer(answer)"
+        >
+          {{ answer.answer_text }}
+        </button>
+        } }
+      </div>
+    } @else {
+      <div class="results-container">
+        <h2>Quiz Finished!</h2>
+        
+        @if (user) {
+          <h3>Your Results:</h3>
+          <p>Score: {{ finalScore }}</p>
+          <p>Correct Answers: {{ correctCount }}</p>
+          <p>Incorrect Answers: {{ wrongCount }}</p>
+
+          <app-leaderboard></app-leaderboard>
+        }
+        
+        <button mat-raised-button color="primary" [routerLink]="['/']">Back to Quizzes</button>
+      </div>
+    }
+  }
+</div>

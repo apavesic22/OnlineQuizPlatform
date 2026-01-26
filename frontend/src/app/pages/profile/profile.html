@@ -1,0 +1,42 @@
+<div class="profile-container">
+  @if (user) {
+    <mat-card class="profile-card">
+      <mat-card-header>
+        <div mat-card-avatar class="user-avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <mat-card-title>{{ user.username }}</mat-card-title>
+        <mat-card-subtitle>{{ getRoleName(user.role_id) }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-divider></mat-divider>
+        <div class="info-list">
+          <div class="info-row">
+            <mat-icon color="primary">email</mat-icon>
+            <div class="text-group">
+              <label>Email Address</label>
+              <span class="value">{{ user.email ? user.email : 'Email not found in database' }}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon color="primary">verified_user</mat-icon>
+            <div class="text-group">
+              <label>Verification Status</label>
+              <span class="value">
+                @if (user.verified === 1) {
+                  <span class="verified-text">Verified Member</span>
+                } @else {
+                  <span>Standard Member</span>
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else {
+    <p>Loading profile...</p>
+  }
+</div>

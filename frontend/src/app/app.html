@@ -1,48 +1,93 @@
-@if(loading) {
-  <div class="loading-wrapper">
-    <mat-spinner [diameter]="32"></mat-spinner>
-    <span>Checking backend...</span>
-  </div>
-} @else {
-  @if(generalError) {
-    <div class="error-wrapper">
-      <div class="general-error">
-        <mat-icon>error</mat-icon>
-        <span>{{ generalError }}</span>
-      </div>
-    </div>
-  } @else {
-    <mat-toolbar color="primary" class="app-toolbar">
-      <span class="app-title">{{ title }}</span>
+<mat-toolbar color="primary" class="toolbar">
+  <span class="app-title" routerLink="/" style="cursor: pointer"
+    >{{ title }}</span
+  >
+  <span class="spacer"></span>
 
-      <span class="spacer"></span>
+  <div class="nav-buttons">
+    <button mat-button routerLink="/home">Home</button>
+    @if (!user || (user.role_id !== 1 && user.role_id !== 2)) {
+    <button mat-button routerLink="/create">Create Quiz</button>
+    } @if (isLoggedIn && user) {
+    <button mat-button routerLink="/leaderboard">
+      <mat-icon>leaderboard</mat-icon>
+      <span>Leaderboard</span>
+    </button>
 
-      <!-- navigation of routes -->
-      @for (route of routes; track route.path) {
-        @if (isRouteAvailable(route)) {
-          <button mat-button routerLink="{{ route.path }}" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: route.path === '' }">
-            <mat-icon>{{ route.icon }}</mat-icon>
-            {{ route.title }}
-          </button>
-        }
-      }
+    @if (isLoggedIn && user.role_id === 3) {
+    <button mat-button (click)="openSuggestionDialog()">
+      <mat-icon>lightbulb</mat-icon>
+      <span>Suggestions</span>
+    </button>
+    } @if (isLoggedIn && user && ( user.role_id <= 2)) {
+    <button mat-button [matMenuTriggerFor]="manageMenu">
+      <span>Manage</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
 
-      <!-- login/logout -->
-      @if(!user || !user.username) {
-        <button mat-button (click)="onLogin()">
-          <mat-icon>login</mat-icon> 
-        </button>
+    <mat-menu #manageMenu="matMenu">
+      <button mat-menu-item routerLink="/manage-users">
+        <mat-icon>people</mat-icon>
+        <span>Manage Users</span>
+      </button>
+      @if (isLoggedIn && user.role_id === 2) {
+      <button mat-menu-item routerLink="/manage-categories">
+        <mat-icon>category</mat-icon>
+        <span>Manage Categories</span>
+      </button>
+      <button mat-menu-item routerLink="/manage-suggestions">
+        <mat-icon>rate_review</mat-icon>
+        <span>Manage Suggestions</span>
+      </button>
+    }
+    </mat-menu>
+    }
+
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
+      @if (user.role_id === 1) {
+      <mat-icon class="admin-badge" title="Administrator"
+        >admin_panel_settings</mat-icon
+      >
+      } @else if (user.role_id === 2) {
+      <mat-icon class="manager-badge" title="Management"
+        >manage_accounts</mat-icon
+      >
+      } @else if (user.verified === 1) {
+      <mat-icon class="verified-badge" title="Verified User">verified</mat-icon>
       } @else {
-        <button mat-stroked-button (click)="onLogout()">
-          <mat-icon>logout</mat-icon> 
-          {{ user.username }}
-        </button>
+      <mat-icon>account_circle</mat-icon>
       }
 
-    </mat-toolbar>
+      <span class="username-text">{{ user.username }}</span>
+      <mat-icon class="dropdown-icon">arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item routerLink="/profile">
+        <mat-icon>account_circle</mat-icon>
+        <span>My Profile</span>
+      </button>
+      @if (user.role_id > 2) {
+      <button mat-menu-item routerLink="/my-stats">
+        <mat-icon>bar_chart</mat-icon>
+        <span>My Quiz Stats</span>
+      </button>
+      }
+      <button mat-menu-item routerLink="/difficulty-dist">
+        <mat-icon>pie_chart</mat-icon>
+        <span>Difficulties Distribution</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="onLogout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+    } @else {
+    <button mat-button (click)="onLogin()">Login</button>
+    }
+  </div>
+</mat-toolbar>
 
-    <div class="content">
-      <router-outlet></router-outlet>
-    </div>
-  }
-}
+<div class="content">
+  <router-outlet></router-outlet>
+</div>

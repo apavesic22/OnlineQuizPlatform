@@ -1,0 +1,124 @@
+.create-quiz-card {
+  max-width: 1000px; 
+  margin: 40px auto;
+  padding: 40px;
+  background: rgba(15, 23, 42, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border-radius: 28px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff;
+
+  .form-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 40px;
+    background: linear-gradient(45deg, #06b6d4, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  ::ng-deep {
+    .mat-mdc-form-field {
+      width: 100% !important;
+      margin-bottom: 15px !important;
+    }
+
+    .mdc-floating-label {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 1.1rem !important;
+    }
+
+    .mat-mdc-form-field.mat-focused .mdc-floating-label {
+      color: #06b6d4 !important;
+      font-weight: 800 !important;
+      text-shadow: 0 0 10px rgba(6, 182, 212, 0.7);
+    }
+
+    .mat-mdc-text-field-wrapper {
+      min-height: 60px !important;
+      background-color: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      border-radius: 12px !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        border-color: #06b6d4 !important;
+      }
+    }
+
+    input.mat-mdc-input-element, textarea.mat-mdc-input-element {
+      color: #ffffff !important;
+      font-size: 1.1rem !important;
+    }
+
+    .mdc-line-ripple {
+      display: none !important;
+    }
+  }
+
+  .selection-row {
+    display: flex !important;
+    gap: 30px;
+    width: 100%;
+    margin: 25px 0;
+
+    mat-form-field {
+      flex: 1 !important;
+    }
+  }
+
+  .question-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 24px;
+    padding: 40px;
+    margin: 40px 0;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
+
+    h4 {
+      color: #8b5cf6;
+      font-size: 1.4rem;
+      margin-bottom: 30px;
+    }
+  }
+
+  .form-actions-container {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+
+    .add-btn {
+      height: 60px;
+      border: 2px dashed rgba(6, 182, 212, 0.5);
+      color: #06b6d4;
+      font-size: 1.2rem;
+      &:hover {
+        background: rgba(6, 182, 212, 0.1);
+      }
+    }
+
+    .submit-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 30px; 
+      margin-top: 20px;
+
+      .cancel-btn {
+        color: #94a3b8;
+        font-weight: 600;
+        &:hover { color: #fff; }
+      }
+
+      .submit-btn {
+        background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%) !important;
+        height: 60px;
+        padding: 0 50px !important;
+        border-radius: 16px;
+        font-weight: 800;
+        box-shadow: 0 10px 25px rgba(6, 182, 212, 0.4);
+      }
+    }
+  }
+}

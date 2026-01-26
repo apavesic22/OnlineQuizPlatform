@@ -1,10 +1,11 @@
 import { Router, Request, Response } from "express";
-import {db} from "../helpers/db";
+import { db } from "../helpers/db";
 import { requireRole, hashPassword } from "../helpers/auth";
+import { User } from "../model/user";
 
 export const usersRouter = Router();
 
-usersRouter.get("/",requireRole([1,2]) , async (req, res) => {
+usersRouter.get("/", requireRole([1, 2]), async (req, res) => {
   try {
     if (!db.connection) {
       return res.status(500).json({ error: "Database not initialized" });
@@ -13,119 +14,137 @@ usersRouter.get("/",requireRole([1,2]) , async (req, res) => {
     const page = Math.max(parseInt(req.query.page as string) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
     const offset = (page - 1) * limit;
+    const search = req.query.search ? `%${req.query.search}%` : null;
 
-    const totalRow = await db.connection.get<{ count: number }>(`
-      SELECT COUNT(*) as count FROM USERS
-    `);
-
-    const total = totalRow?.count ?? 0;
-    const totalPages = Math.ceil(total / limit);
-
-    const users = await db.connection.all(`
-      SELECT
-        u.user_id,
-        u.username,
-        u.email,
-        u.verified,
-        u.rank,
-        u.total_score,
-        r.role_id,
-        r.name AS role_name
+    let query = `
+      SELECT u.user_id, u.username, u.email, u.verified, u.rank, u.total_score, r.role_id, r.name AS role_name
       FROM USERS u
       JOIN USER_ROLES r ON r.role_id = u.role_id
-      ORDER BY u.rank ASC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
+    `;
+    let countQuery = `SELECT COUNT(*) as count FROM USERS u`;
+    const params: any[] = [];
+
+    if (search) {
+      const filter = ` WHERE u.username LIKE ?`;
+      query += filter;
+      countQuery += filter;
+      params.push(search);
+    }
+
+    const totalRow = await db.connection.get<{ count: number }>(
+      countQuery,
+      params
+    );
+    const total = totalRow?.count ?? 0;
+
+    query += ` ORDER BY u.rank ASC LIMIT ? OFFSET ?`;
+    const queryParams = [...params, limit, offset];
+
+    const users = await db.connection.all(query, queryParams);
 
     res.json({
-      page,
-      limit,
-      total,
-      totalPages,
       data: users,
+      total: total,
+      page: page,
+      totalPages: Math.ceil(total / limit),
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
-usersRouter.post(
-  "/",
-  requireRole([1, 2]), 
-  async (req, res) => {
-    try {
-      if (!db.connection) {
-        return res.status(500).json({ error: "Database not initialized" });
-      }
+usersRouter.get("/leaderboard", async (req, res) => {
+  try {
+    if (!db.connection)
+      return res.status(500).json({ error: "Database not initialized" });
 
-      const { username, email, password, role_id, verified } = req.body;
+    const top10 = await db.connection.all(
+      `SELECT username, total_score, rank FROM USERS ORDER BY rank ASC LIMIT 10`
+    );
 
-      // ---- validation ----
-      if (!username || !password || !role_id) {
-        return res.status(400).json({
-          error: "Missing required fields: username, password, role_id",
-        });
-      }
-
-      // ---- role existence ----
-      const role = await db.connection.get(
-        `SELECT role_id FROM USER_ROLES WHERE role_id = ?`,
-        [role_id]
+    let currentUserStats = null;
+    if (req.isAuthenticated()) {
+      const user = req.user as User;
+      currentUserStats = await db.connection.get(
+        `SELECT username, total_score, rank FROM USERS WHERE user_id = ?`,
+        [user.id]
       );
+    }
 
-      if (!role) {
-        return res.status(404).json({ error: "Role not found" });
-      }
+    res.json({
+      top10,
+      currentUser: currentUserStats,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+});
 
-      // ---- uniqueness ----
-      const existing = await db.connection.get(
-        `SELECT user_id FROM USERS WHERE username = ? OR email = ?`,
-        [username, email ?? null]
-      );
+usersRouter.post("/", requireRole([1, 2]), async (req, res) => {
+  try {
+    if (!db.connection) {
+      return res.status(500).json({ error: "Database not initialized" });
+    }
 
-      if (existing) {
-        return res.status(409).json({ error: "User already exists" });
-      }
+    const { username, email, password, role_id, verified } = req.body;
 
-      // ---- insert ----
-      await db.connection.run(
-        `
+    if (!username || !password || !role_id) {
+      return res.status(400).json({
+        error: "Missing required fields: username, password, role_id",
+      });
+    }
+
+    const role = await db.connection.get(
+      `SELECT role_id FROM USER_ROLES WHERE role_id = ?`,
+      [role_id]
+    );
+
+    if (!role) {
+      return res.status(404).json({ error: "Role not found" });
+    }
+
+    const existing = await db.connection.get(
+      `SELECT user_id FROM USERS WHERE username = ? OR email = ?`,
+      [username, email ?? null]
+    );
+
+    if (existing) {
+      return res.status(409).json({ error: "User already exists" });
+    }
+
+    await db.connection.run(
+      `
         INSERT INTO USERS
           (role_id, username, email, password_hash, verified, rank, total_score)
         VALUES (?, ?, ?, ?, ?, 0, 0)
       `,
-        [
-          role_id,
-          username,
-          email ?? null,
-          hashPassword(password),
-          verified ? 1 : 0,
-        ]
-      );
+      [
+        role_id,
+        username,
+        email ?? null,
+        hashPassword(password),
+        verified ? 1 : 0,
+      ]
+    );
 
-      res.status(201).json({ message: "User created successfully" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to create user" });
-    }
+    res.status(201).json({ message: "User created successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create user" });
   }
-);
+});
 
-usersRouter.get(
-  "/:username",
-  requireRole([1, 2]), 
-  async (req, res) => {
-    try {
-      if (!db.connection) {
-        return res.status(500).json({ error: "Database not initialized" });
-      }
+usersRouter.get("/:username", requireRole([1, 2]), async (req, res) => {
+  try {
+    if (!db.connection) {
+      return res.status(500).json({ error: "Database not initialized" });
+    }
 
-      const { username } = req.params;
+    const { username } = req.params;
 
-      const user = await db.connection.get(
-        `
+    const user = await db.connection.get(
+      `
         SELECT
           u.user_id,
           u.username,
@@ -139,104 +158,91 @@ usersRouter.get(
         JOIN USER_ROLES r ON r.role_id = u.role_id
         WHERE u.username = ?
       `,
-        [username]
-      );
+      [username]
+    );
 
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      if (Object.keys(user).length === 0) {
-        return res.status(204).send();
-      }
-
-      res.status(200).json(user);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to fetch user" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    if (Object.keys(user).length === 0) {
+      return res.status(204).send();
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
-);
+});
 
-usersRouter.put(
-  "/:username",
-  requireRole([1, 2]), 
-  async (req, res) => {
-    try {
-      if (!db.connection) {
-        return res.status(500).json({ error: "Database not initialized" });
-      }
+usersRouter.put("/:username", requireRole([1, 2]), async (req, res) => {
+  try {
+    if (!db.connection)
+      return res.status(500).json({ error: "Database not initialized" });
 
-      const { username } = req.params;
-      const { email, role_id, verified } = req.body;
+    const { username } = req.params;
+    const { email, role_id, verified } = req.body;
+    const performer = req.user as User;
+    const performerName = performer?.username || "System admin";
 
-      if (email === undefined && role_id === undefined && verified === undefined) {
-        return res.status(204).send();
-      }
+    const targetUser = await db.connection.get(
+      `SELECT user_id, verified FROM USERS WHERE username = ?`,
+      [username]
+    );
 
-      if (
-        (role_id !== undefined && typeof role_id !== "number") ||
-        (verified !== undefined && ![0, 1].includes(verified))
-      ) {
-        return res.status(400).json({ error: "Invalid fields" });
-      }
+    if (!targetUser) return res.status(404).json({ error: "User not found" });
 
-      const user = await db.connection.get(
-        `SELECT user_id FROM USERS WHERE username = ?`,
-        [username]
-      );
+    const updates: string[] = [];
+    const values: any[] = [];
 
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
+    if (email !== undefined) {
+      updates.push("email = ?");
+      values.push(email);
+    }
+    if (role_id !== undefined) {
+      updates.push("role_id = ?");
+      values.push(role_id);
+    }
+    if (verified !== undefined) {
+      updates.push("verified = ?");
+      values.push(verified);
+    }
 
-      if (role_id !== undefined) {
-        const role = await db.connection.get(
-          `SELECT role_id FROM USER_ROLES WHERE role_id = ?`,
-          [role_id]
-        );
+    if (updates.length === 0)
+      return res.status(400).json({ error: "No fields provided for update" });
 
-        if (!role) {
-          return res.status(400).json({ error: "Invalid role_id" });
-        }
-      }
+    values.push(username);
 
-      const updates: string[] = [];
-      const values: any[] = [];
+    await db.connection.run(
+      `UPDATE USERS SET ${updates.join(", ")} WHERE username = ?`,
+      values
+    );
 
-      if (email !== undefined) {
-        updates.push("email = ?");
-        values.push(email);
-      }
-
-      if (role_id !== undefined) {
-        updates.push("role_id = ?");
-        values.push(role_id);
-      }
-
-      if (verified !== undefined) {
-        updates.push("verified = ?");
-        values.push(verified);
-      }
-
-      values.push(username);
+    if (verified !== undefined && verified !== targetUser.verified) {
+      const actionType = verified === 1 ? "verified" : "unverified";
+      const logMessage = `${performerName} made ${username} a ${actionType} user.`;
 
       await db.connection.run(
-        `UPDATE USERS SET ${updates.join(", ")} WHERE username = ?`,
-        values
+        `INSERT INTO LOGS (action_performer, action, time_of_action, user_id, quiz_id) 
+     VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)`,
+        [performerName, logMessage, targetUser.user_id, null]
       );
-
-      res.status(200).json({ message: "User updated successfully" });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to update user" });
     }
+
+    res.status(200).json({
+      message: "User updated successfully",
+      verified: verified,
+    });
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ error: "Failed to update user" });
   }
-);
+});
 
 usersRouter.delete(
   "/:username",
-  requireRole([1, 2]), // Admin + Management
+  requireRole([1, 2]),
   async (req, res) => {
     try {
       if (!db.connection) {
@@ -245,35 +251,60 @@ usersRouter.delete(
 
       const { username } = req.params;
 
-      // ---- check user existence ----
       const user = await db.connection.get<{
         user_id: number;
         role_id: number;
-      }>(
-        `SELECT user_id, role_id FROM USERS WHERE username = ?`,
-        [username]
-      );
+      }>(`SELECT user_id, role_id FROM USERS WHERE username = ?`, [username]);
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // ---- protect admin accounts ----
       if (user.role_id === 1) {
-        return res.status(403).json({ error: "Cannot delete administrator" });
+        return res.status(403).json({ error: "Cannot delete administrator accounts" });
       }
 
-      await db.connection.run(
-        `DELETE FROM USERS WHERE user_id = ?`,
-        [user.user_id]
-      );
+      await db.connection.run("BEGIN TRANSACTION");
 
-      res.status(200).json({ message: "User deleted successfully" });
+      try {
+        const uid = user.user_id;
+
+        await db.connection.run(`DELETE FROM LOGS WHERE user_id = ?`, [uid]);
+        await db.connection.run(`DELETE FROM QUIZ_LIKES WHERE user_id = ?`, [uid]);
+        await db.connection.run(`DELETE FROM SUGGESTIONS WHERE user_id = ? OR reviewer_id = ?`, [uid, uid]);
+
+        await db.connection.run(`
+          DELETE FROM ATTEMPT_ANSWERS 
+          WHERE attempt_id IN (SELECT attempt_id FROM QUIZ_ATTEMPTS WHERE user_id = ?)
+        `, [uid]);
+        await db.connection.run(`DELETE FROM QUIZ_ATTEMPTS WHERE user_id = ?`, [uid]);
+
+        await db.connection.run(`
+          DELETE FROM ANSWER_OPTIONS WHERE question_id IN (
+            SELECT question_id FROM QUESTIONS WHERE quiz_id IN (
+              SELECT quiz_id FROM QUIZZES WHERE user_id = ?
+            )
+          )
+        `, [uid]);
+
+        await db.connection.run(`
+          DELETE FROM QUESTIONS WHERE quiz_id IN (SELECT quiz_id FROM QUIZZES WHERE user_id = ?)
+        `, [uid]);
+
+        await db.connection.run(`DELETE FROM QUIZZES WHERE user_id = ?`, [uid]);
+
+        await db.connection.run(`DELETE FROM USERS WHERE user_id = ?`, [uid]);
+
+        await db.connection.run("COMMIT");
+        
+        res.status(200).json({ message: `User '${username}' and all associated data deleted.` });
+      } catch (innerError) {
+        await db.connection.run("ROLLBACK");
+        throw innerError;
+      }
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Failed to delete user" });
+      console.error("Delete Error:", err);
+      res.status(500).json({ error: "Failed to delete user due to database constraints" });
     }
   }
 );
-
-

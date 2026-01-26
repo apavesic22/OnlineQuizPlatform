@@ -1,0 +1,101 @@
+<mat-card class="create-quiz-card">
+  <h2 class="form-title">Create New Quiz</h2>
+
+  <form [formGroup]="quizForm" (ngSubmit)="submitQuiz()">
+    <div class="quiz-info-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Quiz Title</mat-label>
+        <input matInput formControlName="quiz_name" placeholder="e.g. History Masters" />
+      </mat-form-field>
+
+      <div class="selection-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category_id">
+            <mat-option *ngFor="let cat of categories" [value]="cat.category_id">
+              {{ cat.category_name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Difficulty</mat-label>
+          <mat-select formControlName="difficulty_id">
+            <mat-option *ngFor="let diff of difficulties" [value]="diff.id">
+              {{ diff.difficulty }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Duration (5-60s)</mat-label>
+          <input matInput type="number" formControlName="duration" />
+          <mat-hint *ngIf="!isVerifiedOrStaff">Verified users can change this.</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div formArrayName="questions">
+      <div *ngFor="let q of questions.controls; let i = index" [formGroupName]="i" class="question-item">
+        <div class="q-header">
+          <h4>Question {{ i + 1 }}</h4>
+          <button mat-icon-button color="warn" type="button" (click)="removeQuestion(i)" *ngIf="questions.length > 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Question Text</mat-label>
+          <textarea matInput formControlName="text" rows="2"></textarea>
+        </mat-form-field>
+
+        <div class="type-selector">
+          <label>Question Type:</label>
+          <mat-radio-group formControlName="type">
+            <mat-radio-button value="multiple">Multiple Choice</mat-radio-button>
+            <mat-radio-button value="boolean">True / False</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <div *ngIf="q.get('type')?.value === 'multiple'" class="options-container">
+          <mat-radio-group formControlName="correct_answer_index">
+            <div formArrayName="options" class="options-grid">
+              <div *ngFor="let opt of getOptions(i); let j = index" class="option-row">
+                <mat-radio-button [value]="j">
+                  <mat-form-field appearance="outline" class="answer-field">
+                    <mat-label>Answer {{ j + 1 }}</mat-label>
+                    <input matInput [formControlName]="j" placeholder="Enter answer..." />
+                  </mat-form-field>
+                </mat-radio-button>
+              </div>
+            </div>
+          </mat-radio-group>
+        </div>
+
+        <div *ngIf="q.get('type')?.value === 'boolean'" class="boolean-container">
+          <mat-radio-group formControlName="boolean_correct">
+            <mat-radio-button value="True">True</mat-radio-button>
+            <mat-radio-button value="False">False</mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions-container">
+      <p *ngIf="questions.length >= 5 && !isVerifiedOrStaff" class="limit-warning">
+        <mat-icon>info</mat-icon> Question limit (5) reached for unverified users.
+      </p>
+
+      <button mat-stroked-button type="button" class="add-btn" (click)="addQuestion()" [disabled]="questions.length >= 5 && !isVerifiedOrStaff">
+        <mat-icon>add_circle_outline</mat-icon> Add New Question
+      </button>
+
+      <div class="submit-group">
+        <button mat-button type="button" class="cancel-btn" (click)="cancel()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="quizForm.invalid">
+          Create Quiz
+        </button>
+      </div>
+    </div>
+  </form>
+</mat-card>

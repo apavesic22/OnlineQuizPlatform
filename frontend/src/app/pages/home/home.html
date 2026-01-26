@@ -1,10 +1,119 @@
-@if(isInRole([0,1])) {
-    <canvas class="chart-container"
-      baseChart
-      [data]="chartData"
-      [options]="chartOptions"
-      [type]="'bar'">
-    </canvas>
-} @else {
-    <em>You have to log in to operate</em>
-}
+<div class="home-container">
+  @if (loading) {
+  <p class="status-msg">Loading quizzes...</p>
+  } @else if (quizzes.length === 0) {
+  <p class="status-msg">No quizzes found.</p>
+  } @else {
+  <div class="quiz-grid">
+    @for (quiz of quizzes; track quiz.quiz_id) {
+    <mat-card class="quiz-card">
+      <mat-card-header>
+        <mat-card-title>{{ quiz.quiz_name }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ quiz.category_name }} · {{ quiz.difficulty }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="info-row">
+          <mat-icon>quiz</mat-icon>
+          <span>Questions: {{ quiz.question_count }}</span>
+        </div>
+        <div class="info-row">
+          <mat-icon>timer</mat-icon>
+          <span>{{ quiz.duration || 15 }}s per question</span>
+        </div>
+        <div class="info-row">
+          @if (quiz.role_id >= 1 && quiz.role_id <= 3) {
+          <mat-icon class="verified-badge">verified</mat-icon>
+          } @else {
+          <mat-icon>person</mat-icon>
+          }
+          <span>By: {{ quiz.creator }}</span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="card-footer">
+        @if (isLoggedIn) {
+        <div class="like-section">
+          <button
+            mat-icon-button
+            (click)="toggleLike(quiz); $event.stopPropagation()"
+            [color]="quiz.user_has_liked ? 'warn' : ''"
+          >
+            <mat-icon>{{ quiz.user_has_liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+          </button>
+          <span class="like-count">{{ quiz.likes || 0 }}</span>
+        </div>
+        }
+
+        <span class="spacer"></span>
+
+        @if (isLoggedIn && user && (user.role_id === 1 || user.role_id === 2)) {
+        <div class="admin-actions">
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteQuiz(quiz); $event.stopPropagation()"
+            title="Delete Quiz"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+          
+          @if (user.role_id === 1) {
+          <button
+            mat-mini-fab
+            color="accent"
+            class="edit-fab"
+            (click)="openEditDialog(quiz.quiz_id); $event.stopPropagation()"
+            title="Edit Quiz"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          }
+        </div>
+        }
+
+        <button
+          mat-raised-button
+          color="primary"
+          [routerLink]="['/play', quiz.quiz_id]"
+        >
+          Play
+        </button>
+      </mat-card-actions>
+    </mat-card>
+    }
+  </div>
+
+  @if (totalPages > 1) {
+  <div class="pagination-container">
+    <button
+      mat-button
+      (click)="loadQuizzes(currentPage - 1)"
+      [disabled]="currentPage === 1"
+    >
+      Previous
+    </button>
+
+    @for (p of pages; track p) {
+    <button
+      mat-mini-fab
+      [color]="currentPage === p ? 'primary' : ''"
+      (click)="loadQuizzes(p)"
+      class="page-num-btn"
+    >
+      {{ p }}
+    </button>
+    }
+
+    <button
+      mat-button
+      (click)="loadQuizzes(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+    >
+      Next
+    </button>
+  </div>
+  } }
+</div>

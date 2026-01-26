@@ -1,0 +1,60 @@
+<div class="manage-container">
+  <h1>User Suggestions</h1>
+
+  @if (loading) {
+  <p>Loading suggestions...</p>
+  } @else {
+  <div class="suggestions-grid">
+    @for (s of suggestions; track s.id) {
+    <mat-card class="suggestion-card" [ngClass]="s.status">
+      <mat-card-header>
+        <mat-card-title>{{ s.title }}</mat-card-title>
+        <mat-card-subtitle>
+          Submitted by: <strong>{{ s.username }}</strong>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ s.description }}</p>
+
+        @if (s.status !== 'pending') {
+        <div class="review-info">
+          <mat-divider></mat-divider>
+          <p style="margin-top: 10px; font-size: 0.85em; color: gray">
+            <mat-icon style="font-size: 16px; vertical-align: middle"
+              >history</mat-icon
+            >
+            Reviewed by <strong>{{ s.reviewer_username || 'System' }}</strong>
+            on {{ s.reviewed_at | date:'medium' }}
+          </p>
+        </div>
+        }
+      </mat-card-content>
+
+      <mat-divider></mat-divider>
+
+      <mat-card-actions align="end">
+        @if (s.status === 'pending') {
+        <button mat-button color="warn" (click)="updateStatus(s, 'rejected')">
+          Reject
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="updateStatus(s, 'approved')"
+        >
+          <mat-icon>check</mat-icon> Approve
+        </button>
+        } @else {
+        <span class="status-label">
+          Status: <strong>{{ s.status | uppercase }}</strong>
+        </span>
+        <button mat-button (click)="updateStatus(s, 'pending')">Reset</button>
+        }
+      </mat-card-actions>
+    </mat-card>
+    } @empty {
+    <p>No suggestions found.</p>
+    }
+  </div>
+  }
+</div>

@@ -1,55 +1,114 @@
 import { Component } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
+  MatDialog,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-
-import { AuthService } from '../../services/auth';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { RegisterDialog } from '../register/register';
+import { AuthService } from '../../services/authService';
 
 @Component({
-  selector: 'login',
+  selector: 'login-dialog',
   standalone: true,
-  imports: [MatDialogModule, MatInputModule, ReactiveFormsModule],
-  templateUrl: './login.html',
-  styleUrls: ['./login.scss']
+  styleUrls: ["./login.scss"],
+  imports: [
+    MatDialogModule,
+    MatButtonModule,
+    MatInputModule,
+    MatSnackBarModule,
+    ReactiveFormsModule,
+  ],
+  template: `
+    <h2 mat-dialog-title>Login</h2>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-dialog-content>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" />
+        </mat-form-field>
+      </mat-dialog-content>
+
+      <div style="margin-top: 15px; text-align: center;">
+        Not registered?
+        <a
+          (click)="onRegister()"
+          style="color: blue; cursor: pointer; text-decoration: underline;"
+          >Register now</a
+        >
+      </div>
+      <mat-dialog-actions align="end">
+        <button mat-button mat-dialog-close type="button">Cancel</button>
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Login
+        </button>
+      </mat-dialog-actions>
+    </form>
+  `,
+  styles: [
+    `
+      .full {
+        width: 100%;
+      }
+    `,
+  ],
 })
 export class LoginDialog {
-  form: FormGroup;
+  form!: FormGroup;
 
   constructor(
-    private snackBar: MatSnackBar,
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private snack: MatSnackBar,
     private dialogRef: MatDialogRef<LoginDialog>,
-    private authService: AuthService,
-    private fb: FormBuilder
+    private dialog: MatDialog
   ) {
     this.form = this.fb.group({
       username: ['', Validators.required],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
-  onLogin(): void {
-    if (!this.form.valid) {
-      return;
-    }
+  onRegister() {
+    this.dialogRef.close();
+    this.dialog.open(RegisterDialog, { width: '400px' });
+  }
 
-    const username = this.form.get('username')!.value;
-    const password = this.form.get('password')!.value;
+  onSubmit() {
+    const { username, password } = this.form.value;
 
-    this.authService.login(username, password).subscribe({
-      next: () => {
-        this.snackBar.open('Login successful', 'Close', {
-          duration: 5000,
-          panelClass: ['snackbar-success']
+    this.auth.login(username, password).subscribe({
+      next: (user) => {
+        this.snack.open(`Welcome back, ${user.username}!`, 'Close', {
+          duration: 3000,
         });
-        this.dialogRef.close(true);
+        this.dialogRef.close();
       },
-      error: () => {
-        this.snackBar.open('Invalid username or password', 'Close', {
-          duration: 5000,
-          panelClass: ['snackbar-error']
+      error: (err) => {
+        this.snack.open('Invalid username or password', 'Close', {
+          duration: 3000,
         });
-      }
+        console.error('Login failed', err);
+      },
     });
   }
 }

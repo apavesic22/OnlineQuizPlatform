@@ -1,0 +1,37 @@
+<div class="leaderboard-container">
+  <h3>Leaderboard</h3>
+  @if (loading) {
+    <p>Loading leaderboard...</p>
+  } @else if (leaderboard && leaderboard.top10.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (player of leaderboard.top10; track player.user_id) {
+          <tr class="player-row">
+            <td>{{ player.rank }}</td>
+            <td>{{ player.username }}</td>
+            <td>{{ player.total_score }}</td>
+          </tr>
+        }
+        @if (leaderboard.currentUser) {
+          <tr class="current-user-row">
+            <td colspan="3" class="separator">...</td>
+          </tr>
+          <tr class="player-row current-user">
+            <td>{{ leaderboard.currentUser.rank }}</td>
+            <td>{{ leaderboard.currentUser.username }}</td>
+            <td>{{ leaderboard.currentUser.total_score }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p>Leaderboard is currently empty.</p>
+  }
+</div>

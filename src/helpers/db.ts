@@ -2,6 +2,7 @@ import { open, Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { hashPassword } from "./auth";
 import { faker } from "@faker-js/faker";
+import { quizData } from "./quizData";
 export const db: { connection: Database | null } = {
   connection: null,
 };
@@ -56,21 +57,19 @@ export const categoriesTableDef = {
   },
 };
 
-export const categorySuggestionsTableDef = {
-  name: "CATEGORY_SUGGESTIONS",
+export const suggestionsTableDef = {
+  name: "SUGGESTIONS",
   columns: {
     suggestion_id: { type: "INTEGER", primaryKey: true, autoincrement: true },
-
     user_id: { type: "INTEGER", notNull: true },
-    name: { type: "TEXT", notNull: true },
-
+    title: { type: "TEXT", notNull: true }, 
+    description: { type: "TEXT", notNull: true }, 
     status: {
       type: "TEXT",
       notNull: true,
       default: "pending",
       check: "status IN ('pending','approved','rejected')",
     },
-
     created_at: {
       type: "DATETIME",
       notNull: true,
@@ -84,7 +83,6 @@ export const categorySuggestionsTableDef = {
     { column: "reviewer_id", references: "USERS(user_id)" },
   ],
 };
-
 export const questionTypesTableDef = {
   name: "QUESTION_TYPES",
   columns: {
@@ -206,7 +204,7 @@ export const logsTableDef = {
     time_of_action: { type: "DATETIME", defaultRaw: "CURRENT_TIMESTAMP" },
 
     user_id: { type: "INTEGER", notNull: true },
-    quiz_id: { type: "INTEGER", notNull: true },
+    quiz_id: { type: "INTEGER"},
   },
   foreignKeys: [
     { column: "user_id", references: "USERS(user_id)" },
@@ -324,101 +322,124 @@ export async function seedRoles(): Promise<void> {
 export async function seedUsers(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
-  // --- fixed system users ---
   const seed = [
-    {
-      role_id: 1,
-      username: "admin",
-      email: "admin@quizify.local",
-      password: process.env.SEED_ADMIN_PASSWORD || "Admin123",
-      verified: 1,
-    },
-    {
-      role_id: 2,
-      username: "manager",
-      email: "manager@quizify.local",
-      password: process.env.SEED_MANAGER_PASSWORD || "Manager123",
-      verified: 1,
-    },
-    {
-      role_id: 3,
-      username: "verified",
-      email: "verified@quizify.local",
-      password: process.env.SEED_VERIFIED_PASSWORD || "Verified123",
-      verified: 1,
-    },
-    {
-      role_id: 4,
-      username: "user",
-      email: "user@quizify.local",
-      password: process.env.SEED_USER_PASSWORD || "User123",
-      verified: 0,
-    },
+    { role_id: 1, username: "admin", email: "admin@quizify.local", password: process.env.SEED_ADMIN_PASSWORD || "Admin123", verified: 1 },
+    { role_id: 2, username: "manager", email: "manager@quizify.local", password: process.env.SEED_MANAGER_PASSWORD || "Manager123", verified: 1 },
+    { role_id: 3, username: "verified", email: "verified@quizify.local", password: process.env.SEED_VERIFIED_PASSWORD || "Verified123", verified: 1 },
+    { role_id: 4, username: "user", email: "user@quizify.local", password: process.env.SEED_USER_PASSWORD || "User123", verified: 0 },
   ];
 
-  // --- faker users count (env or default) ---
   const FAKE_USERS_COUNT = parseInt(process.env.DBFAKEUSERS || "20");
 
-  // --- insert fixed users ---
   for (const u of seed) {
     await db.connection.run(
-      `INSERT OR IGNORE INTO USERS
-       (role_id, username, email, password_hash, verified, rank, total_score)
+      `INSERT OR IGNORE INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        u.role_id,
-        u.username,
-        u.email,
-        hashPassword(u.password),
-        u.verified,
-        0,
-        0,
-      ]
+      [u.role_id, u.username, u.email, hashPassword(u.password), u.verified, 0, 0]
     );
   }
 
-  // --- insert faker users ---
   for (let i = 0; i < FAKE_USERS_COUNT; i++) {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
+    const username = faker.internet.username({ firstName, lastName }).toLowerCase();
+    const email = faker.internet.email({ firstName, lastName }).toLowerCase();
+    const password_hash = hashPassword("User123");
 
-    const username = faker.internet
-      .username({
-        firstName,
-        lastName,
-      })
-      .toLowerCase();
+    const isVerified = faker.datatype.boolean() ? 1 : 0;
 
-    const email = faker.internet
-      .email({
-        firstName,
-        lastName,
-      })
-      .toLowerCase();
-
-    const password_hash = hashPassword("User123"); // same password for all fake users
+    const roleId = isVerified === 1 ? 3 : 4;
 
     await db.connection.run(
-      `INSERT OR IGNORE INTO USERS
-       (role_id, username, email, password_hash, verified, rank, total_score)
+      `INSERT OR IGNORE INTO USERS (role_id, username, email, password_hash, verified, rank, total_score)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
-        4,
+        roleId, 
         username,
         email,
         password_hash,
-        faker.datatype.boolean() ? 1 : 0,
+        isVerified,
         0,
         faker.number.int({ min: 0, max: 5000 }),
       ]
     );
   }
 }
+export async function seedRealQuizzes(): Promise<void> {
+  if (!db.connection) throw new Error("DB not open");
+
+  const creator = await db.connection.get<{ user_id: number }>(
+    `SELECT user_id FROM USERS WHERE user_id = 4 LIMIT 1`
+  );
+  if (!creator) {
+    console.error("Seed failed: User with ID 4 not found.");
+    return;
+  }
+
+  console.log("Starting to seed real quiz data...");
+
+  try {
+    await db.connection.run("BEGIN TRANSACTION");
+
+    for (const quiz of quizData) {
+      const quizResult = await db.connection.run(
+        `INSERT INTO QUIZZES 
+          (user_id, category_id, difficulty_id, quiz_name, question_count, duration) 
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          creator.user_id,
+          quiz.cat,        
+          quiz.diff,       
+          quiz.name,       
+          quiz.qs.length,  
+          15              
+        ]
+      );
+
+      const quizId = quizResult.lastID!;
+
+      for (let i = 0; i < quiz.qs.length; i++) {
+        const questionObj = quiz.qs[i];
+
+        const qRes = await db.connection.run(
+          `INSERT INTO QUESTIONS 
+            (quiz_id, question_type_id, question_text, position, time_limit) 
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            quizId,
+            1,                  
+            questionObj.t,      
+            i + 1,              
+            15                  
+          ]
+        );
+
+        const questionId = qRes.lastID!;
+
+        for (const answerText of questionObj.a) {
+          const isCorrect = (answerText === questionObj.c) ? 1 : 0;
+
+          await db.connection.run(
+            `INSERT INTO ANSWER_OPTIONS (question_id, answer_text, is_correct) 
+             VALUES (?, ?, ?)`,
+            [questionId, answerText, isCorrect]
+          );
+        }
+      }
+    }
+
+    await db.connection.run("COMMIT");
+    console.log(`Success: Seeded ${quizData.length} quizzes with 5 questions each.`);
+  } catch (error) {
+    await db.connection.run("ROLLBACK");
+    console.error("Seeding failed. Transaction rolled back:", error);
+  }
+}
 
 export async function recomputeUserRanks(): Promise<void> {
   if (!db.connection) throw new Error("DB not open");
 
-  // Order users by score DESC (highest first)
+  
   const users: { user_id: number; total_score: number }[] = await db.connection
     .all(`
     SELECT user_id, total_score
@@ -437,6 +458,37 @@ export async function recomputeUserRanks(): Promise<void> {
   }
 
   console.log("User ranks recomputed");
+}
+
+export async function getCategoryLeaderboard(categoryId: number): Promise<any[]> {
+  if (!db.connection) throw new Error("DB not open");
+
+  let query = `
+    SELECT 
+      u.username, 
+      u.role_id,
+      u.verified,
+      SUM(qa.score) as total_score, 
+      COUNT(qa.attempt_id) as quizzes_completed
+    FROM USERS u
+    JOIN QUIZ_ATTEMPTS qa ON u.user_id = qa.user_id
+    JOIN QUIZZES q ON qa.quiz_id = q.quiz_id
+  `;
+
+  const params: any[] = [];
+
+  if (categoryId !== 0) {
+    query += ` WHERE q.category_id = ? `;
+    params.push(categoryId);
+  }
+
+  query += `
+    GROUP BY u.user_id
+    ORDER BY total_score DESC
+    LIMIT 10
+  `;
+
+  return await db.connection.all(query, params);
 }
 
 function seedQuizDifficulties() {
@@ -490,7 +542,6 @@ export async function seedCategories(): Promise<void> {
 
 const indexStatements = [
   `CREATE INDEX IF NOT EXISTS idx_users_role ON USERS(role_id);`,
-  `CREATE INDEX IF NOT EXISTS idx_category_suggestions_status ON CATEGORY_SUGGESTIONS(status);`,
 
   `CREATE INDEX IF NOT EXISTS idx_questions_type ON QUESTIONS(question_type_id);`,
   `CREATE INDEX IF NOT EXISTS idx_questions_quiz ON QUESTIONS(quiz_id);`,
@@ -524,8 +575,8 @@ export async function createSchemaAndData(): Promise<void> {
   await seedCategories();
   console.log("Categories table created");
 
-  await db.connection.exec(createTableStatement(categorySuggestionsTableDef));
-  console.log("Category suggestions table created");
+  await db.connection.exec(createTableStatement(suggestionsTableDef));
+  console.log("Suggestions table created");
 
   await db.connection.exec(createTableStatement(questionTypesTableDef));
   await seedQuestionTypes();
@@ -555,6 +606,9 @@ export async function createSchemaAndData(): Promise<void> {
 
   await db.connection.exec(createTableStatement(quizAttemptsTableDef));
   console.log("Quiz attempts table created");
+
+  await seedRealQuizzes();
+  console.log("Quizzes seeded");
 
   for (const stmt of indexStatements) {
     await db.connection.exec(stmt);

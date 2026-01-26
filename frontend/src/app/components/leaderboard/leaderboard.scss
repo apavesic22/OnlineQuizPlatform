@@ -1,0 +1,98 @@
+.leaderboard-container {
+  width: 100%;
+  max-width: 650px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: rgba(30, 41, 59, 0.8) !important; 
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+
+h3 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #06b6d4, #8b5cf6);
+    
+    -webkit-background-clip: text;
+    background-clip: text; 
+    
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px; 
+
+    thead th {
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      padding: 0.5rem 1rem;
+      border: none;
+      text-align: left;
+    }
+
+    .player-row {
+      background: rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+
+      td {
+        padding: 1.2rem 1rem;
+        border: none;
+        color: #f8fafc;
+        font-size: 1.1rem;
+
+        &:first-child {
+          border-radius: 12px 0 0 12px;
+          font-weight: 900;
+          color: #06b6d4;
+          width: 60px;
+        }
+
+        &:last-child {
+          border-radius: 0 12px 12px 0;
+          font-weight: 700;
+          color: #8b5cf6; 
+          text-align: right;
+        }
+      }
+
+      &:hover {
+        transform: translateY(-2px) scale(1.01);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .current-user {
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.3)) !important;
+      outline: 1px solid #8b5cf6;
+      
+      td {
+        color: #ffffff !important;
+        text-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+      }
+    }
+
+    .current-user-row .separator {
+      text-align: center;
+      color: #64748b;
+      font-size: 1.5rem;
+      padding: 0.5rem;
+    }
+  }
+}
+
+.leaderboard-container p {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  padding: 2rem;
+}

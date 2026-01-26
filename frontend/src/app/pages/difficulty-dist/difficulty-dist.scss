@@ -1,0 +1,51 @@
+.dist-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  min-height: 90vh;
+  background: transparent;
+
+  .dist-card {
+    width: 100%;
+    max-width: 650px;
+    padding: 30px;
+    background: rgba(30, 41, 59, 0.6) !important;
+    backdrop-filter: blur(20px);
+    border-radius: 28px !important;
+    text-align: center;
+
+    mat-card-header {
+      justify-content: center;
+      margin-bottom: 30px;
+      
+      mat-card-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #f8fafc;
+      }
+      mat-card-subtitle { color: #94a3b8; font-size: 1rem; }
+    }
+  }
+
+  .chart-container {
+    position: relative;
+    height: 450px;
+    margin: 20px 0;
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      z-index: -1;
+    }
+  }
+
+  .no-data-message {
+    padding: 60px;
+    mat-icon { font-size: 64px; color: #334155; }
+    p { font-size: 1.2rem; color: #64748b; }
+  }
+}
